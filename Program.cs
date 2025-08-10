@@ -1,4 +1,5 @@
-﻿using IchigoHoshimiya.Interfaces;
+﻿using IchigoHoshimiya.Adapters;
+using IchigoHoshimiya.Interfaces;
 using IchigoHoshimiya.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +11,7 @@ using NetCord.Hosting.Services.Commands;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
+builder.Services.AddTransient<IClient, RestClientAdapter>();
 builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<ITwitterReplacementService, TwitterReplacementService>();
 

@@ -2,13 +2,11 @@ using IchigoHoshimiya.Interfaces;
 using JetBrains.Annotations;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
-using NetCord.Rest;
 
 namespace IchigoHoshimiya.Handlers;
 
-// sendmessage and delete message and client itself need to be abstracted behind IClient
 [UsedImplicitly]
-public class MessageCreateHandler(RestClient client, ITwitterReplacementService twitterReplacementService)
+public class MessageCreateHandler(IClient client, ITwitterReplacementService twitterReplacementService)
     : IMessageCreateGatewayHandler
 {
     public ValueTask HandleAsync(Message message)
