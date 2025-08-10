@@ -1,12 +1,23 @@
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
+using NetCord.Rest;
 
 namespace IchigoHoshimiya.Handlers;
 
-public class MessageCreateHandler : IMessageCreateGatewayHandler
+public class MessageCreateHandler(RestClient client) : IMessageCreateGatewayHandler
 {
-    public ValueTask HandleAsync(Message message)
+    public async ValueTask HandleAsync(Message message)
     {
-        return default;
+        if (message.Author.IsBot)
+            return;
+
+        string content = message.Content?.Trim() ?? string.Empty;
+
+        switch (content.ToLower())
+        {
+            case "hello":
+                await client.SendMessageAsync(message.ChannelId, "Hello!");
+                break;
+        }
     }
 }

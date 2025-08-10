@@ -31,8 +31,4 @@ IHost host = builder.Build()
 // NetCord: Add commands from modules
 host.AddModules(typeof(Program).Assembly);
 
-
-// NetCord: Add handlers to handle the commands
-host.UseGatewayHandlers();
-
 await host.RunAsync();
