@@ -11,6 +11,7 @@ using NetCord.Hosting.Services.Commands;
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<IPingService, PingService>();
+builder.Services.AddSingleton<ITwitterReplacementService, TwitterReplacementService>();
 
 builder.Services
        .AddDiscordGateway(options =>

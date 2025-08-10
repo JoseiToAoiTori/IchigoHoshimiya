@@ -1,23 +1,45 @@
+using IchigoHoshimiya.Interfaces;
+using JetBrains.Annotations;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Rest;
 
 namespace IchigoHoshimiya.Handlers;
 
-public class MessageCreateHandler(RestClient client) : IMessageCreateGatewayHandler
+// One day I wanna try abstracting this too
+[UsedImplicitly]
+public class MessageCreateHandler(RestClient client, ITwitterReplacementService twitterReplacementService)
+    : IMessageCreateGatewayHandler
 {
-    public async ValueTask HandleAsync(Message message)
+    public ValueTask HandleAsync(Message message)
     {
         if (message.Author.IsBot)
-            return;
-
-        string content = message.Content?.Trim() ?? string.Empty;
-
-        switch (content.ToLower())
         {
-            case "hello":
-                await client.SendMessageAsync(message.ChannelId, "Hello!");
-                break;
+            return ValueTask.CompletedTask;
+        }
+
+        HandleTwitter(message);
+
+        return ValueTask.CompletedTask;
+    }
+
+    private async void HandleTwitter(Message message)
+    {
+        try
+        {
+            string? newContent = await twitterReplacementService.GetReplacedContentAsync(message.Content);
+
+            if (newContent is null)
+            {
+                return;
+            }
+            
+            _ = client.SendMessageAsync(message.ChannelId, newContent);
+            _ = client.DeleteMessageAsync(message.ChannelId, message.Id);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"An error occurred while sending the message: {e.Message}");
         }
     }
 }
