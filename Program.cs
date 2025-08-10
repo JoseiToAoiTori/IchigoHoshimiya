@@ -2,16 +2,22 @@
 using IchigoHoshimiya.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
+using NetCord.Hosting.Services.Commands;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSingleton<IPingService, PingService>();
 
 builder.Services
-       .AddDiscordGateway()
+       .AddDiscordGateway(options =>
+        {
+            options.Intents = GatewayIntents.GuildMessages | GatewayIntents.DirectMessages | GatewayIntents.MessageContent;
+        })
+       .AddCommands()
        .AddApplicationCommands();
 
 IHost host = builder.Build();
