@@ -15,12 +15,18 @@ builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services
        .AddDiscordGateway(options =>
         {
-            options.Intents = GatewayIntents.GuildMessages | GatewayIntents.DirectMessages | GatewayIntents.MessageContent;
+            options.Intents = GatewayIntents.GuildMessages |
+                              GatewayIntents.DirectMessages |
+                              GatewayIntents.MessageContent |
+                              GatewayIntents.DirectMessageReactions |
+                              GatewayIntents.GuildMessageReactions;
         })
        .AddCommands()
-       .AddApplicationCommands();
+       .AddApplicationCommands()
+       .AddGatewayHandlers(typeof(Program).Assembly);
 
-IHost host = builder.Build();
+IHost host = builder.Build()
+                    .UseGatewayHandlers();
 
 // NetCord: Add commands from modules
 host.AddModules(typeof(Program).Assembly);
