@@ -6,7 +6,7 @@ using NetCord.Rest;
 
 namespace IchigoHoshimiya.Handlers;
 
-// One day I wanna try abstracting this too
+// sendmessage and delete message and client itself need to be abstracted behind IClient
 [UsedImplicitly]
 public class MessageCreateHandler(RestClient client, ITwitterReplacementService twitterReplacementService)
     : IMessageCreateGatewayHandler
@@ -18,6 +18,7 @@ public class MessageCreateHandler(RestClient client, ITwitterReplacementService 
             return ValueTask.CompletedTask;
         }
 
+        // I think discord now has button support for messages, so can we show a button to the user to delete the message?
         HandleTwitter(message);
 
         return ValueTask.CompletedTask;
@@ -33,7 +34,7 @@ public class MessageCreateHandler(RestClient client, ITwitterReplacementService 
             {
                 return;
             }
-            
+
             _ = client.SendMessageAsync(message.ChannelId, newContent);
             _ = client.DeleteMessageAsync(message.ChannelId, message.Id);
         }
