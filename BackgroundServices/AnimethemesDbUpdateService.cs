@@ -80,16 +80,7 @@ public class AnimeThemesDbUpdateService(
                 return;
             }
 
-            string sqlScript = await DownloadSqlFileAsync(dumpUrl, stoppingToken);
-
-            if (string.IsNullOrWhiteSpace(sqlScript))
-            {
-                logger.LogWarning("Downloaded SQL script is empty. Skipping execution.");
-
-                return;
-            }
-
-            await ExecuteSqlScriptAsync(sqlScript, stoppingToken);
+            await ExecuteSqlScriptFromUrlAsync(dumpUrl, stoppingToken);
 
             logger.LogInformation("Database update completed successfully.");
         }
@@ -123,23 +114,41 @@ public class AnimeThemesDbUpdateService(
 
         return link;
     }
-
-    private async Task<string> DownloadSqlFileAsync(string url, CancellationToken cancellationToken)
+    
+    private async Task ExecuteSqlScriptFromUrlAsync(string url, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Downloading SQL file from: {Url}", url);
+        logger.LogInformation("Applying SQL dump directly from URL: {Url}", url);
 
-        return await httpClient.GetStringAsync(url, cancellationToken);
-    }
-
-    private async Task ExecuteSqlScriptAsync(string sqlScript, CancellationToken cancellationToken)
-    {
-        // Remember buddy, turn on the damn docker container on local
         await using var connection = new MySqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
 
-        await using MySqlCommand cmd = connection.CreateCommand();
-        cmd.CommandTimeout = 0; // No timeout for huge imports
-        cmd.CommandText = sqlScript;
-        await cmd.ExecuteNonQueryAsync(cancellationToken);
+        await using Stream stream = await httpClient.GetStreamAsync(url, cancellationToken);
+        using var reader = new StreamReader(stream);
+
+        var scriptBuilder = new StringBuilder();
+
+        while (await reader.ReadLineAsync(cancellationToken) is { } line)
+        {
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith("--"))
+            {
+                continue; // skip comments and blank lines
+            }
+
+            scriptBuilder.AppendLine(line);
+
+            // Execute when a statement ends
+            if (!line.TrimEnd().EndsWith(';'))
+            {
+                continue;
+            }
+
+            var sqlStatement = scriptBuilder.ToString();
+            scriptBuilder.Clear();
+
+            await using var cmd = new MySqlCommand(sqlStatement, connection);
+            cmd.CommandTimeout = 0;
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+        }
     }
+
 }
