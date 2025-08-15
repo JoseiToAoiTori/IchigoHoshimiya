@@ -1,0 +1,7 @@
+{
+  dumpPaginator(sort: [CREATED_AT_DESC], first: 1) {
+    data {
+      link
+    }
+  }
+}

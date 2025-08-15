@@ -1,0 +1,2 @@
+schema: https://graphql.animethemes.moe
+documents: '**/*.graphql'

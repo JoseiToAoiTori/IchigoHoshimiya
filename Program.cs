@@ -1,4 +1,5 @@
 ﻿using IchigoHoshimiya.Adapters;
+using IchigoHoshimiya.BackgroundServices;
 using IchigoHoshimiya.Context;
 using IchigoHoshimiya.Interfaces;
 using IchigoHoshimiya.Services;
@@ -14,7 +15,15 @@ using NetCord.Hosting.Services.Commands;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
+builder.Services.Configure<AnimeThemesUpdaterSettings>(
+    builder.Configuration.GetSection("AnimeThemesUpdater"));
+
+builder.Services.AddHttpClient<AnimeThemesDbUpdateService>();
+
+builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
+
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 // AnimeThemeEntry is the key
 builder.Services.AddDbContext<AnimethemesDbContext>(options =>
     options.UseMySQL(connectionString!));

@@ -5,5 +5,8 @@
   },
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Port=3306;Database=animethemes;Uid=root;Pwd=<your-password>;"
+  },
+  "AnimeThemesUpdater": {
+    "GraphQLEndpoint": "https://graphql.animethemes.moe"
   }
 }
