@@ -1,105 +1,61 @@
+using System.Text;
 using FuzzySharp;
 using IchigoHoshimiya.Context;
 using IchigoHoshimiya.DTO;
 using IchigoHoshimiya.Entities;
 using IchigoHoshimiya.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using NetCord;
+using NetCord.Rest;
 
 namespace IchigoHoshimiya.Services;
 
-public class AnimethemeService(AnimethemesDbContext dbContext) : IAnimethemeService
+public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration configuration) : IAnimethemeService
 {
-    public List<AnimethemeDto>? GetAllAnimethemes(string query)
+    public EmbedProperties GetAllAnimethemes(string query)
     {
-        if (string.IsNullOrWhiteSpace(query))
+        List<AnimethemeDto> fuzzyMatchesDto = GetFuzzyMatches(query, 10);
+
+        if (fuzzyMatchesDto.Count == 0)
         {
-            return null;
+            return new EmbedProperties()
+               .WithTitle("No matches found for your query");
         }
 
-        string[] queryTokens = query.Trim().ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var embedDescriptionBuilder = new StringBuilder();
 
-        List<AnimeThemeEntry> candidates = dbContext.AnimeThemeEntries
-                                                    .Include(e => e.Theme)
-                                                    .ThenInclude(t => t.Song)
-                                                    .Include(e => e.Theme)
-                                                    .ThenInclude(t => t.Anime)
-                                                    .ThenInclude(a => a.AnimeSynonyms)
-                                                    .Include(e => e.AnimeThemeEntryVideos)
-                                                    .ThenInclude(v => v.Video)
-                                                    .Where(e => e.Theme.Song != null)
-                                                    .AsEnumerable()
-                                                    .Where(e => queryTokens.Any(token =>
-                                                         e.Theme.Slug.Contains(
-                                                             token,
-                                                             StringComparison.CurrentCultureIgnoreCase) ||
-                                                         (e.Theme.Song?.Title ?? "").Contains(
-                                                             token,
-                                                             StringComparison.CurrentCultureIgnoreCase) ||
-                                                         e.Theme.Anime.Name.Contains(
-                                                             token,
-                                                             StringComparison.CurrentCultureIgnoreCase) ||
-                                                         e.Theme.Anime.AnimeSynonyms.Any(s => (s.Text ?? "").Contains(
-                                                             token,
-                                                             StringComparison.CurrentCultureIgnoreCase))
-                                                     ))
-                                                    .ToList();
+        for (var i = 0; i < fuzzyMatchesDto.Count; i++)
+        {
+            AnimethemeDto match = fuzzyMatchesDto[i];
 
-        List<AnimeThemeEntry> fuzzyMatches = candidates
-                                            .Select(e =>
-                                             {
-                                                 var totalScore = 0.0;
-                                                 var matchedTokens = 0;
+            embedDescriptionBuilder.AppendLine(
+                $"{i + 1}. [{match.Anime} {match.Slug} - {match.Theme}]({match.Link})"
+            );
+        }
 
-                                                 foreach (string token in queryTokens)
-                                                 {
-                                                     var scoresForToken = new List<int>
-                                                     {
-                                                         Fuzz.PartialRatio(token, e.Theme.Slug ?? ""),
-                                                         Fuzz.PartialRatio(token, e.Theme.Song?.Title ?? ""),
-                                                         Fuzz.PartialRatio(token, e.Theme.Anime?.Name ?? "")
-                                                     };
-
-                                                     // Match against synonyms
-                                                     if (e.Theme.Anime?.AnimeSynonyms != null)
-                                                     {
-                                                         scoresForToken.AddRange(
-                                                             e.Theme.Anime.AnimeSynonyms.Select(synonym =>
-                                                                 Fuzz.PartialRatio(token, synonym.Text ?? "")));
-                                                     }
-
-                                                     int maxScoreForToken = scoresForToken.Max();
-
-                                                     if (maxScoreForToken < 80)
-                                                     {
-                                                         continue;
-                                                     }
-
-                                                     totalScore += maxScoreForToken;
-                                                     matchedTokens++;
-                                                 }
-
-                                                 double finalScore = matchedTokens > 0 ? totalScore / matchedTokens : 0;
-
-                                                 return new
-                                                 {
-                                                     Entry = e,
-                                                     Score = finalScore
-                                                 };
-                                             })
-                                            .Take(10)
-                                            .Where(x => x.Score >= 80)
-                                            .OrderByDescending(x => x.Score)
-                                            .Select(x => x.Entry)
-                                            .ToList();
-
-        List<AnimethemeDto> fuzzyMatchesDto = ToDto(fuzzyMatches);
-
-        return fuzzyMatchesDto;
+        return new EmbedProperties()
+              .WithTitle("Your search results")
+              .WithColor(
+                   new Color(
+                       (byte)short.Parse(configuration["EmbedColours:Red"]!),
+                       (byte)short.Parse(configuration["EmbedColours:Green"]!),
+                       (byte)short.Parse(configuration["EmbedColours:Blue"]!)))
+              .WithDescription(embedDescriptionBuilder.ToString());
     }
 
-    public AnimethemeDto GetAnimetheme(string query)
+    public string GetAnimetheme(string query)
     {
-        throw new NotImplementedException();
+        List<AnimethemeDto> fuzzyMatchesDto = GetFuzzyMatches(query, 5);
+
+        if (fuzzyMatchesDto.Count == 0)
+        {
+            return "No matches found for your query";
+        }
+
+        AnimethemeDto firstMatch = fuzzyMatchesDto[0];
+
+        return $"{firstMatch.Anime} {firstMatch.Slug} - {firstMatch.Theme}\n{firstMatch.Link}";
     }
 
     private static List<AnimethemeDto> ToDto(List<AnimeThemeEntry> themes)
@@ -120,5 +76,49 @@ public class AnimethemeService(AnimethemesDbContext dbContext) : IAnimethemeServ
                           };
                       })
                      .ToList();
+    }
+
+    private List<AnimethemeDto> GetFuzzyMatches(string query, int count)
+    {
+        List<AnimeThemeEntry> candidates = dbContext.AnimeThemeEntries
+                                                    .Include(e => e.Theme)
+                                                    .ThenInclude(t => t.Song)
+                                                    .Include(e => e.Theme)
+                                                    .ThenInclude(t => t.Anime)
+                                                    .ThenInclude(a => a.AnimeSynonyms)
+                                                    .Include(e => e.AnimeThemeEntryVideos)
+                                                    .ThenInclude(v => v.Video)
+                                                    .Where(e => e.Theme.Song != null)
+                                                    .ToList();
+
+        var scored = candidates.Select(e =>
+        {
+            string animeName = e.Theme.Anime.Name;
+            List<string?> synonyms = e.Theme.Anime.AnimeSynonyms.Select(s => s.Text).ToList();
+
+            int exactBoost = animeName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                             synonyms.Any(s => s != null && s.Contains(query, StringComparison.OrdinalIgnoreCase))
+                ? 100
+                : 0;
+
+            int nameScore = Fuzz.TokenSetRatio(query, animeName);
+            int synonymScore = synonyms.Count != 0 ? synonyms.Max(s => Fuzz.TokenSetRatio(query, s)) : 0;
+
+            var themeTitle = $"{e.Theme.Slug} {e.Theme.Song!.Title}";
+            int themeScore = Fuzz.PartialRatio(query, themeTitle);
+
+            int finalScore = Math.Max(nameScore, synonymScore) + exactBoost;
+            finalScore = Math.Max(finalScore, themeScore / 2);
+
+            return new { Entry = e, Score = finalScore };
+        });
+
+        List<AnimeThemeEntry> fuzzyMatches = scored
+                                            .OrderByDescending(x => x.Score)
+                                            .Take(count)
+                                            .Select(x => x.Entry)
+                                            .ToList();
+
+        return ToDto(fuzzyMatches);
     }
 }

@@ -1,10 +1,10 @@
-using IchigoHoshimiya.DTO;
+using NetCord.Rest;
 
 namespace IchigoHoshimiya.Interfaces;
 
 public interface IAnimethemeService
 {
-    public AnimethemeDto GetAnimetheme(string query);
+    public string GetAnimetheme(string query);
 
-    public List<AnimethemeDto>? GetAllAnimethemes(string query);
+    public EmbedProperties GetAllAnimethemes(string query);
 }

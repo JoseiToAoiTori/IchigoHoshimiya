@@ -10,6 +10,12 @@ public class RestClientAdapter(RestClient restClient) : IClient
         return restClient.SendMessageAsync(channelId, content);
     }
 
+    // Will be useful at some point I bet
+    public Task SendEmbedMessageAsync(ulong channelId, MessageProperties messageProperties)
+    {
+        return restClient.SendMessageAsync(channelId, messageProperties);
+    }
+
     public Task DeleteMessageAsync(ulong channelId, ulong messageId)
     {
         return restClient.DeleteMessageAsync(channelId, messageId);

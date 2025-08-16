@@ -8,5 +8,10 @@
   },
   "AnimeThemesUpdater": {
     "GraphQLEndpoint": "https://graphql.animethemes.moe"
+  },
+  "EmbedColours": {
+    "Red": 255,
+    "Green": 239,
+    "Blue": 120
   }
 }
