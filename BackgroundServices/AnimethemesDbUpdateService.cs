@@ -41,7 +41,7 @@ public class AnimeThemesDbUpdateService(
         logger.LogInformation("AnimeThemes Update Service is starting.");
 
         // Run immediately at startup
-        await RunUpdateAsync(stoppingToken);
+        // await RunUpdateAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -114,7 +114,7 @@ public class AnimeThemesDbUpdateService(
 
         return link;
     }
-    
+
     private async Task ExecuteSqlScriptFromUrlAsync(string url, CancellationToken cancellationToken)
     {
         logger.LogInformation("Applying SQL dump directly from URL: {Url}", url);
@@ -150,5 +150,4 @@ public class AnimeThemesDbUpdateService(
             await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
     }
-
 }

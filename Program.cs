@@ -31,6 +31,7 @@ builder.Services.AddDbContext<AnimethemesDbContext>(options =>
 builder.Services.AddTransient<IClient, RestClientAdapter>();
 builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<ITwitterReplacementService, TwitterReplacementService>();
+builder.Services.AddScoped<IAnimethemeService, AnimethemeService>();
 
 builder.Services
        .AddDiscordGateway(options =>
