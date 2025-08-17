@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using NetCord.Rest;
 using NetCord.Services.Commands;
 
-namespace IchigoHoshimiya.Modules;
+namespace IchigoHoshimiya.Modules.TextCommands;
 
 [UsedImplicitly]
 public class MultiThemeTextCommandModule(IAnimethemeService animethemeService)
@@ -13,7 +13,7 @@ public class MultiThemeTextCommandModule(IAnimethemeService animethemeService)
     [UsedImplicitly]
     public MessageProperties Themes([CommandParameter(Remainder = true)] string query)
     {
-        EmbedProperties embed = animethemeService.GetAllAnimethemes(query);
+        EmbedProperties embed = animethemeService.GetAllAnimethemes(query, null);
 
         MessageProperties props = new MessageProperties()
            .WithEmbeds([embed]);

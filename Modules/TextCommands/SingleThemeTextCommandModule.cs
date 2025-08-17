@@ -2,7 +2,7 @@ using IchigoHoshimiya.Interfaces;
 using JetBrains.Annotations;
 using NetCord.Services.Commands;
 
-namespace IchigoHoshimiya.Modules;
+namespace IchigoHoshimiya.Modules.TextCommands;
 
 [UsedImplicitly]
 public class SingleThemeTextCommandModule(IAnimethemeService animethemeService) : CommandModule<CommandContext>
@@ -11,6 +11,6 @@ public class SingleThemeTextCommandModule(IAnimethemeService animethemeService) 
     [UsedImplicitly]
     public string GetAnimetheme([CommandParameter(Remainder = true)] string query)
     {
-        return animethemeService.GetAnimetheme(query);
+        return animethemeService.GetAnimetheme(query, null);
     }
 }

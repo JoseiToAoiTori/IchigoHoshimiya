@@ -24,7 +24,6 @@ builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// AnimeThemeEntry is the key
 builder.Services.AddDbContext<AnimethemesDbContext>(options =>
     options.UseMySQL(connectionString!));
 
