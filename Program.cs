@@ -7,11 +7,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Hosting.Services.Commands;
+using NetCord.Services;
+using NetCord.Services.Commands;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
@@ -19,7 +22,6 @@ builder.Services.Configure<AnimeThemesUpdaterSettings>(
     builder.Configuration.GetSection("AnimeThemesUpdater"));
 
 builder.Services.AddHttpClient<AnimeThemesDbUpdateService>();
-
 builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -41,7 +43,11 @@ builder.Services
                               GatewayIntents.DirectMessageReactions |
                               GatewayIntents.GuildMessageReactions;
         })
-       .AddCommands()
+       .AddCommands<CommandContext>(options =>
+        {
+            // Suppress "Command not found"
+            options.ResultHandler = new InlineResultHandler();
+        })
        .AddApplicationCommands()
        .AddGatewayHandlers(typeof(Program).Assembly);
 
@@ -52,3 +58,20 @@ IHost host = builder.Build()
 host.AddModules(typeof(Program).Assembly);
 
 await host.RunAsync();
+
+file sealed class InlineResultHandler : ICommandResultHandler<CommandContext>
+{
+    private readonly CommandResultHandler<CommandContext> _default = new();
+
+    public ValueTask HandleResultAsync(
+        IExecutionResult result,
+        CommandContext context,
+        GatewayClient client,
+        ILogger logger,
+        IServiceProvider services)
+    {
+        return result is NotFoundResult
+            ? ValueTask.CompletedTask
+            : _default.HandleResultAsync(result, context, client, logger, services);
+    }
+}
