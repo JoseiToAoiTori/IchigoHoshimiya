@@ -11,7 +11,7 @@ public partial class TwitterReplacementService : ITwitterReplacementService
     private static readonly Regex SFxTwitterRegex = MyRegex();
 
 
-    public Task<string?> GetReplacedContentAsync(string originalContent)
+    public Task<string?> GetReplacedContentAsync(string originalContent, string username)
     {
         bool hasLink = SDomainsToWatch.Any(originalContent.Contains);
 
@@ -27,7 +27,7 @@ public partial class TwitterReplacementService : ITwitterReplacementService
         content = SFxTwitterRegex.Replace(content, "$1/en");
 
         return content != originalContent
-            ? Task.FromResult<string?>(content)
+            ? Task.FromResult<string?>($"Sent by {username}: {content}")
             : Task.FromResult<string?>(null);
     }
 
