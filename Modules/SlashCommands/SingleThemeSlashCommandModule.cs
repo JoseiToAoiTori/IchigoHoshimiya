@@ -11,7 +11,14 @@ public class SingleThemeSlashCommandModule(IAnimethemeService animethemeService)
 {
     [SlashCommand("theme", "Returns a single anime theme for the specified query")]
     [UsedImplicitly]
-    public async Task GetAnimetheme(string query, string? slug = "")
+    public async Task GetAnimetheme(
+        [SlashCommandParameter(
+            Name = "query",
+            Description =
+                "A search query (anime or theme name)")]
+        string query,
+        [SlashCommandParameter(Name = "slug", Description = "An optional slug e.g OP2, ED1 etc.")]
+        string? slug = "")
     {
         var command = new GenericDeferredSlashCommandHandlerForText(Context, ThemeFunction);
 

@@ -12,15 +12,21 @@ public class MultiThemeSlashCommandModule(IAnimethemeService animethemeService)
 {
     [SlashCommand("themes", "Returns up to 10 anime themes for the specified query.")]
     [UsedImplicitly]
-    public async Task GetAnimetheme(string query, string? slug = "")
+    public async Task GetAnimethemes(
+        [SlashCommandParameter(
+            Name = "query",
+            Description =
+                "A search query (anime or theme name)")]
+        string query,
+        [SlashCommandParameter(Name = "slug", Description = "An optional slug e.g OP2, ED1 etc.")]
+        string? slug = "")
     {
         var command = new GenericDeferredSlashCommandHandlerForEmbed(Context, ThemeFunction);
 
         await command.ExecuteAsync();
 
         return;
-
-        // Define the function that gets the themes
+        
         Task<EmbedProperties> ThemeFunction()
         {
             return Task.Run(() => animethemeService.GetAllAnimethemes(query, slug));

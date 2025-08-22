@@ -78,6 +78,8 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                      .ToList();
     }
 
+    // Cute to have some code debt so let's keep it this way for now since it's still kinda "in beta"
+    // Clean up in the future for sure copium
     private List<AnimethemeDto> GetFuzzyMatches(string query, int count, string? slug)
     {
         IQueryable<AnimeThemeEntry> builderQuery = dbContext.AnimeThemeEntries
@@ -128,23 +130,26 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                         : 0;
 
                                     int bestAnimeScore = Math.Max(animeNameScore, synonymScore);
-                                    
+
                                     int themeScore1 = Fuzz.TokenSetRatio(normalizedQuery, themeTitle);
                                     int themeScore2 = Fuzz.PartialRatio(normalizedQuery, themeTitle);
                                     int bestThemeScore = Math.Max(themeScore1, themeScore2);
 
-                                    // first token vs anime (for anime+theme queries)
                                     int firstTokenAnimeScore = Math.Max(
                                         Fuzz.PartialRatio(firstToken, animeName),
                                         synonyms.Count > 0
                                             ? synonyms.Max(s => Fuzz.PartialRatio(firstToken, s))
                                             : 0
                                     );
+                                    
+                                    bool looksLikeThemeQuery = bestAnimeScore < 50 && bestThemeScore >= 50;
 
-                                    // Weighting
-                                    double weightedScore = 0.5 * bestThemeScore + 0.5 * bestAnimeScore;
-
-                                    // Boost for exact matches
+                                    double weightedScore = looksLikeThemeQuery
+                                        ? 0.25 * bestAnimeScore + 0.75 * bestThemeScore
+                                        : multiToken
+                                            ? 0.75 * bestAnimeScore + 0.25 * bestThemeScore
+                                            : 0.5 * bestAnimeScore + 0.5 * bestThemeScore;
+                                    
                                     if (string.Equals(
                                             themeTitle,
                                             normalizedQuery,
@@ -158,16 +163,32 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                         weightedScore += 15;
                                     }
 
-                                    // ✅ New: prioritize exact-prefix matches
                                     if (animeName.StartsWith(normalizedQuery, StringComparison.OrdinalIgnoreCase))
                                     {
-                                        weightedScore +=
-                                            string.IsNullOrEmpty(slug) ? 10 : 20;
+                                        weightedScore += 30;
                                     }
                                     else if (animeName.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase))
                                     {
-                                        weightedScore +=
-                                            string.IsNullOrEmpty(slug) ? 5 : 10;
+                                        weightedScore += 15;
+                                    }
+
+                                    if (themeTitle.StartsWith(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        weightedScore += 20;
+                                    }
+                                    else if (themeTitle.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        weightedScore += 10;
+                                    }
+
+                                    bool allTokensInAnime = queryTokens.All(t =>
+                                        animeName.Contains(t, StringComparison.OrdinalIgnoreCase) ||
+                                        synonyms.Any(s => s.Contains(t, StringComparison.OrdinalIgnoreCase))
+                                    );
+
+                                    if (allTokensInAnime)
+                                    {
+                                        weightedScore += 20;
                                     }
 
                                     return new
@@ -183,21 +204,22 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                 {
                                     if (!multiToken)
                                     {
-                                        return x.AnimeScore >= 80;
+                                        return x.AnimeScore >= 60 || x.ThemeScore >= 60;
                                     }
 
                                     if (x.FirstTokenAnimeScore >= 60)
                                     {
-                                        return (x.ThemeScore >= 65 && x.AnimeScore >= 35) || x.AnimeScore >= 55;
+                                        return x.AnimeScore >= 50;
                                     }
 
-                                    return x.ThemeScore >= 70;
+                                    return x.ThemeScore >= 55;
                                 })
                                .OrderByDescending(x => x.Score)
                                .GroupBy(x => x.Entry.Theme.ThemeId)
                                .Select(g => g.First())
                                .Take(count)
                                .ToList();
+
 
         List<AnimeThemeEntry> fuzzyMatches = scored
                                             .OrderByDescending(x => x.Score)
@@ -206,7 +228,7 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                             .ToList();
 
         return ToDto(fuzzyMatches);
-        
+
         string Normalize(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -215,9 +237,18 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
             }
 
             string lowered = input.ToLowerInvariant();
-            var noPunct = new string(lowered.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray());
 
-            return string.Join(" ", noPunct.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            char[] chars = lowered.Select(c =>
+                                       char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)
+                                           ? c
+                                           : ' '
+                                   )
+                                  .ToArray();
+
+            return string.Join(
+                " ",
+                new string(chars)
+                   .Split(' ', StringSplitOptions.RemoveEmptyEntries));
         }
     }
 }
