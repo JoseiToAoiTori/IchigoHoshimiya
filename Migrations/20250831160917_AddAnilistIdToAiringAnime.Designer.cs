@@ -3,6 +3,7 @@ using System;
 using IchigoHoshimiya.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IchigoHoshimiya.Migrations
 {
     [DbContext(typeof(IchigoContext))]
-    partial class IchigoContextModelSnapshot : ModelSnapshot
+    [Migration("20250831160917_AddAnilistIdToAiringAnime")]
+    partial class AddAnilistIdToAiringAnime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,10 +40,10 @@ namespace IchigoHoshimiya.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("airing_anime");
+                    b.ToTable("AiringAnime");
                 });
 
-            modelBuilder.Entity("IchigoHoshimiya.Entities.AniList.AiringEpisode", b =>
+            modelBuilder.Entity("IchigoHoshimiya.Entities.AniList.AiringEpisodes", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,23 +66,18 @@ namespace IchigoHoshimiya.Migrations
 
                     b.HasIndex("AnimeId");
 
-                    b.ToTable("airing_episode");
+                    b.ToTable("AiringEpisodes");
                 });
 
-            modelBuilder.Entity("IchigoHoshimiya.Entities.AniList.AiringEpisode", b =>
+            modelBuilder.Entity("IchigoHoshimiya.Entities.AniList.AiringEpisodes", b =>
                 {
                     b.HasOne("IchigoHoshimiya.Entities.AniList.AiringAnime", "Anime")
-                        .WithMany("AiringEpisodes")
+                        .WithMany()
                         .HasForeignKey("AnimeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Anime");
-                });
-
-            modelBuilder.Entity("IchigoHoshimiya.Entities.AniList.AiringAnime", b =>
-                {
-                    b.Navigation("AiringEpisodes");
                 });
 #pragma warning restore 612, 618
         }

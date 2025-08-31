@@ -16,15 +16,17 @@ using NetCord.Hosting.Services.Commands;
 using NetCord.Services;
 using NetCord.Services.Commands;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.Configure<AnimeThemesUpdaterSettings>(
     builder.Configuration.GetSection("AnimeThemesUpdater"));
 
 builder.Services.AddHttpClient<AnimeThemesDbUpdateService>();
+builder.Services.AddHttpClient<SeasonalCalendarDbUpdateService>();
 builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
+builder.Services.AddHostedService<SeasonalCalendarDbUpdateService>();
 
-string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 
 builder.Services.AddDbContext<AnimethemesDbContext>(options =>
@@ -56,8 +58,8 @@ builder.Services
        .AddApplicationCommands()
        .AddGatewayHandlers(typeof(Program).Assembly);
 
-IHost host = builder.Build()
-                    .UseGatewayHandlers();
+var host = builder.Build()
+                  .UseGatewayHandlers();
 
 // NetCord: Add commands from modules
 host.AddModules(typeof(Program).Assembly);

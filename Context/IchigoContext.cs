@@ -1,5 +1,4 @@
 ﻿using IchigoHoshimiya.Entities.AniList;
-using IchigoHoshimiya.Entities.Animethemes;
 using Microsoft.EntityFrameworkCore;
 
 namespace IchigoHoshimiya.Context;
@@ -17,5 +16,5 @@ public class IchigoContext : DbContext
 
     public virtual DbSet<AiringAnime> AiringAnime { get; set; }
     
-    public virtual DbSet<AiringEpisodes> AiringEpisodes { get; set; }
+    public virtual DbSet<AiringEpisode> AiringEpisodes { get; set; }
 }
