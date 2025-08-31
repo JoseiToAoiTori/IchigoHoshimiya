@@ -26,8 +26,13 @@ builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+
 builder.Services.AddDbContext<AnimethemesDbContext>(options =>
     options.UseMySQL(connectionString!));
+
+builder.Services.AddDbContext<IchigoContext>(options =>
+    options.UseMySQL(connectionString!));
+
 
 builder.Services.AddTransient<IClient, RestClientAdapter>();
 builder.Services.AddSingleton<IPingService, PingService>();

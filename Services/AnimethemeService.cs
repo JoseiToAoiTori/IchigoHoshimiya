@@ -2,7 +2,7 @@ using System.Text;
 using FuzzySharp;
 using IchigoHoshimiya.Context;
 using IchigoHoshimiya.DTO;
-using IchigoHoshimiya.Entities;
+using IchigoHoshimiya.Entities.Animethemes;
 using IchigoHoshimiya.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -116,7 +116,7 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                                              .ToList();
 
                                     string themeTitle = Normalize(e.Theme.Song?.Title ?? "");
-                                    
+
                                     int animeNameScore = Math.Max(
                                         Fuzz.TokenSortRatio(normalizedQuery, animeName),
                                         Fuzz.TokenSetRatio(normalizedQuery, animeName)
@@ -141,7 +141,7 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                             ? synonyms.Max(s => Fuzz.PartialRatio(firstToken, s))
                                             : 0
                                     );
-                                    
+
                                     bool looksLikeThemeQuery = bestAnimeScore < 50 && bestThemeScore >= 50;
 
                                     double weightedScore = looksLikeThemeQuery
@@ -149,7 +149,7 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                         : multiToken
                                             ? 0.75 * bestAnimeScore + 0.25 * bestThemeScore
                                             : 0.5 * bestAnimeScore + 0.5 * bestThemeScore;
-                                    
+
                                     if (string.Equals(
                                             themeTitle,
                                             normalizedQuery,
