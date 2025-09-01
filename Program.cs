@@ -40,6 +40,7 @@ builder.Services.AddTransient<IClient, RestClientAdapter>();
 builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<ITwitterReplacementService, TwitterReplacementService>();
 builder.Services.AddScoped<IAnimethemeService, AnimethemeService>();
+builder.Services.AddScoped<ICalendarService, CalendarService>();
 
 builder.Services
        .AddDiscordGateway(options =>
@@ -58,8 +59,7 @@ builder.Services
        .AddApplicationCommands()
        .AddGatewayHandlers(typeof(Program).Assembly);
 
-var host = builder.Build()
-                  .UseGatewayHandlers();
+var host = builder.Build();
 
 // NetCord: Add commands from modules
 host.AddModules(typeof(Program).Assembly);

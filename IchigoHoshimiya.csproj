@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="FuzzySharp" Version="2.0.2"/>
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.0"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.1"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
             <PrivateAssets>all</PrivateAssets>
@@ -20,10 +20,10 @@
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8"/>
         <PackageReference Include="MySql.EntityFrameworkCore" Version="9.0.6"/>
         <PackageReference Include="MySqlConnector" Version="2.4.0"/>
-        <PackageReference Include="NetCord" Version="1.0.0-alpha.410"/>
-        <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.410"/>
-        <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.410"/>
-        <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.410"/>
+        <PackageReference Include="NetCord" Version="1.0.0-alpha.421"/>
+        <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.421"/>
+        <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.421"/>
+        <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.421"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -36,7 +36,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Migrations\" />
+        <Folder Include="Migrations\"/>
     </ItemGroup>
 
 </Project>
