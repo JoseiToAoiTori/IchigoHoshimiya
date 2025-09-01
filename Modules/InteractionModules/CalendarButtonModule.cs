@@ -68,7 +68,7 @@ public class CalendarButtonModule(ICalendarService calendarService)
             Components = [components]
         };
         
-        await RespondAsync(InteractionCallback.Message(updatedMessage));
+        await Context.Interaction.SendFollowupMessageAsync(updatedMessage);
     }
     
     private async Task RespondWithErrorAsync(string message)
@@ -78,6 +78,7 @@ public class CalendarButtonModule(ICalendarService calendarService)
             Content = message,
             Flags = MessageFlags.Ephemeral
         };
-        await RespondAsync(InteractionCallback.Message(errorResponse));
+        
+        await Context.Interaction.SendFollowupMessageAsync(errorResponse);
     }
 }
