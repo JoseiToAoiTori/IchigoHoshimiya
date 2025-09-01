@@ -1,7 +1,5 @@
-using IchigoHoshimiya.Handlers;
 using IchigoHoshimiya.Interfaces;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Configuration;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -9,7 +7,7 @@ using NetCord.Services.ApplicationCommands;
 namespace IchigoHoshimiya.Modules.SlashCommands;
 
 [UsedImplicitly]
-public class CalendarSlashCommandModule(ICalendarService calendarService, IConfiguration configuration)
+public class CalendarSlashCommandModule(ICalendarService calendarService)
     : ApplicationCommandModule<ApplicationCommandContext>
 {
     [SlashCommand("calendar", "Get the airing calendar for a specified day (defaults to today)")]
@@ -19,34 +17,48 @@ public class CalendarSlashCommandModule(ICalendarService calendarService, IConfi
         string? dayOfWeek =
             null)
     {
-        var command = new GenericDeferredSlashCommandHandlerForEmbed(Context, CalendarFunction);
+        await RespondAsync(InteractionCallback.DeferredMessage());
+        var targetDate = DateTime.UtcNow;
 
-        await command.ExecuteAsync();
-
-        return;
-
-        async Task<EmbedProperties> CalendarFunction()
+        switch (string.IsNullOrWhiteSpace(dayOfWeek))
         {
-            if (string.IsNullOrWhiteSpace(dayOfWeek))
+            case false when Enum.TryParse<DayOfWeek>(dayOfWeek, true, out var parsedDay):
             {
-                return await calendarService.GetCalendar(null);
-            }
+                var daysToAdd = (int)parsedDay - (int)targetDate.DayOfWeek;
+                targetDate = targetDate.AddDays(daysToAdd);
 
-            if (Enum.TryParse<DayOfWeek>(dayOfWeek, true, out var parsedDay))
-            {
-                return await calendarService.GetCalendar(parsedDay);
+                break;
             }
-
-            return new EmbedProperties
-            {
-                Title = "Invalid Day",
-                Color = new Color(
-                    (byte)short.Parse(configuration["EmbedColours:Red"]!),
-                    (byte)short.Parse(configuration["EmbedColours:Green"]!),
-                    (byte)short.Parse(configuration["EmbedColours:Blue"]!)),
-                Description = $"`{dayOfWeek}` is not a valid day of the week.\n" +
-                              "Please use values like `Monday`, `Tuesday`, etc."
-            };
+            case false:
+                InteractionMessageProperties errorResponse = new()
+                {
+                    Content = "Not a valid day of the week"
+                };
+                await Context.Interaction.SendFollowupMessageAsync(errorResponse);
+                return;
         }
+        
+        var embed = await calendarService.GetCalendar(targetDate.DayOfWeek);
+        
+        // Hack to maintain state for the arrow buttons
+        embed.Footer = new EmbedFooterProperties
+        {
+            Text = $"Date: {targetDate:yyyy-MM-dd}"
+        };
+        embed.Timestamp = DateTimeOffset.UtcNow;
+        
+        ButtonProperties previousButton = new("calendar-previous", "⬅️ Previous Day", ButtonStyle.Primary);
+        ButtonProperties nextButton = new("calendar-next", "Next Day ➡️", ButtonStyle.Primary);
+        ButtonProperties todayButton = new("calendar-today", "Today", ButtonStyle.Primary);
+        
+        ActionRowProperties components = new([previousButton, todayButton, nextButton]);
+        
+        InteractionMessageProperties response = new()
+        {
+            Embeds = [embed],
+            Components = [components]
+        };
+
+        await Context.Interaction.SendFollowupMessageAsync(response);
     }
 }

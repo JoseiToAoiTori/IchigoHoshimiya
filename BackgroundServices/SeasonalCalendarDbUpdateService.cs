@@ -38,7 +38,9 @@ public class SeasonalCalendarDbUpdateService(
         logger.LogInformation("AnimeThemes Update Service is starting.");
 
         // Run immediately at startup
+        #if RELEASE
         await GetSeasonalCalendarAsync(stoppingToken);
+        #endif
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -50,7 +52,7 @@ public class SeasonalCalendarDbUpdateService(
             }
             catch (TaskCanceledException)
             {
-                break; // Service is stopping
+                break;
             }
 
             await GetSeasonalCalendarAsync(stoppingToken);
@@ -64,8 +66,7 @@ public class SeasonalCalendarDbUpdateService(
         var query = await File.ReadAllTextAsync("Queries/Anilist/SeasonalsQuery.graphql", stoppingToken);
 
         var (startDate, endDate) = GetCurrentYearFuzzyDates();
-
-        // 3. Prepare for pagination
+        
         var allMedia = new List<Media>();
         var page = 1;
         var hasNextPage = true;

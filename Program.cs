@@ -8,13 +8,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NetCord;
 using NetCord.Gateway;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Hosting.Services.Commands;
+using NetCord.Hosting.Services.ComponentInteractions;
 using NetCord.Services;
 using NetCord.Services.Commands;
+using NetCord.Services.ComponentInteractions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -57,6 +60,7 @@ builder.Services
             options.ResultHandler = new InlineResultHandler();
         })
        .AddApplicationCommands()
+       .AddComponentInteractions<ButtonInteraction, ButtonInteractionContext>()
        .AddGatewayHandlers(typeof(Program).Assembly);
 
 var host = builder.Build();
