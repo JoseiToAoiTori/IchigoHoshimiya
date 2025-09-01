@@ -42,11 +42,7 @@ public class SeasonalCalendarDbUpdateService(
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var nowUtc = DateTime.UtcNow;
-            var nextRunTime = nowUtc.Date.AddHours(2); // Run in 2 hours again
-            var delay = nextRunTime - nowUtc;
-
-            logger.LogInformation("Next database update scheduled for: {NextRunTime} UTC.", nextRunTime);
+            var delay = TimeSpan.FromHours(2);
 
             try
             {
