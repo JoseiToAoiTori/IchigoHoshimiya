@@ -48,6 +48,7 @@ public class CalendarButtonModule(ICalendarService calendarService)
     
     private async Task UpdateCalendarMessage(DateTime targetDate)
     {
+        await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredModifyMessage);
         var newEmbed = await calendarService.GetCalendar(targetDate.DayOfWeek);
         
         newEmbed.Footer = new EmbedFooterProperties
@@ -62,13 +63,11 @@ public class CalendarButtonModule(ICalendarService calendarService)
         ButtonProperties todayButton = new("calendar-today", "Today", ButtonStyle.Primary);
         ActionRowProperties components = new([previousButton, todayButton, nextButton]);
         
-        InteractionMessageProperties updatedMessage = new()
+        await Context.Interaction.ModifyFollowupMessageAsync(Context.Message.Id, options =>
         {
-            Embeds = [newEmbed],
-            Components = [components]
-        };
-        
-        await Context.Interaction.SendFollowupMessageAsync(updatedMessage);
+            options.Embeds = [newEmbed];
+            options.Components = [components];
+        });
     }
     
     private async Task RespondWithErrorAsync(string message)
