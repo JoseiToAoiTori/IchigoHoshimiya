@@ -37,6 +37,7 @@ public class CalendarService(IchigoContext dbContext, IConfiguration configurati
 
         var episodesAiring = await dbContext.AiringEpisodes
                                             .Where(episode => episode.AiringAtUtc.Date == targetDate)
+                                            .OrderBy(episode => episode.AiringAtUtc)
                                             .Include(airingEpisode => airingEpisode.Anime!)
                                             .ToListAsync();
 
