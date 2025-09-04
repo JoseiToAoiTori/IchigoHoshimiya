@@ -13,14 +13,14 @@ public partial class TwitterReplacementService : ITwitterReplacementService
 
     public Task<string?> GetReplacedContentAsync(string originalContent, string username)
     {
-        bool hasLink = SDomainsToWatch.Any(originalContent.Contains);
+        var hasLink = SDomainsToWatch.Any(originalContent.Contains);
 
         if (!hasLink)
         {
             return Task.FromResult<string?>(null);
         }
 
-        string content = SDomainsToWatch.Aggregate(
+        var content = SDomainsToWatch.Aggregate(
             originalContent,
             (current, domain) => current.Replace(domain, ReplacementDomain));
 

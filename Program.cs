@@ -26,8 +26,11 @@ builder.Services.Configure<AnimeThemesUpdaterSettings>(
 
 builder.Services.AddHttpClient<AnimeThemesDbUpdateService>();
 builder.Services.AddHttpClient<SeasonalCalendarDbUpdateService>();
+builder.Services.AddHttpClient<RssSearcherAndPosterService>();
+
 builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
 builder.Services.AddHostedService<SeasonalCalendarDbUpdateService>();
+builder.Services.AddHostedService<RssSearcherAndPosterService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -44,6 +47,7 @@ builder.Services.AddSingleton<IPingService, PingService>();
 builder.Services.AddSingleton<ITwitterReplacementService, TwitterReplacementService>();
 builder.Services.AddScoped<IAnimethemeService, AnimethemeService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
+builder.Services.AddScoped<IRssService, RssService>();
 
 builder.Services
        .AddDiscordGateway(options =>

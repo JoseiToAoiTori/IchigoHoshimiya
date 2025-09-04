@@ -12,7 +12,7 @@ public class GenericDeferredSlashCommandHandlerForText(
     {
         await context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
 
-        string content = await contentFunction();
+        var content = await contentFunction();
 
         await context.Interaction.ModifyResponseAsync(message => message.WithContent(content));
     }

@@ -13,5 +13,6 @@
     "Red": 255,
     "Green": 239,
     "Blue": 120
-  }
+  },
+  "jackettUrl": "http://localhost:9117/api/v2.0/indexers/all/results?apikey=<your-api-key>&Tracker[]=nyaasi"
 }
