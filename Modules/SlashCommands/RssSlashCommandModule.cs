@@ -8,7 +8,7 @@ namespace IchigoHoshimiya.Modules.SlashCommands;
 
 public class RssSlashCommandModule(IRssService rssService) : ApplicationCommandModule<ApplicationCommandContext>
 {
-    [SlashCommand("moviereminder", "Notify when a movie drops on nyaa")]
+    [SlashCommand("notify", "Notify when a movie/OVA/batch anime drops on nyaa")]
     [UsedImplicitly]
     public async Task CreateRssReminder(
         [SlashCommandParameter(
