@@ -13,7 +13,7 @@ public class RssReminder
 
     [Column("search_string")]
     [MaxLength(1000)]
-    public string SearchString { get; init; }
+    public required string SearchString { get; init; }
 
     [Column("enabled")] public bool Enabled { get; set; } = true;
 
