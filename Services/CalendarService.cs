@@ -41,12 +41,31 @@ public class CalendarService(IchigoContext dbContext, IConfiguration configurati
                                             .Include(airingEpisode => airingEpisode.Anime!)
                                             .ToListAsync();
 
-        var description = episodesAiring.Count != 0
-            ? string.Join(
-                "\n",
-                episodesAiring.Select(e =>
-                    $"**{e.Anime!.Title}**\n{e.AiringAtUtc:HH:mm}"))
-            : "No episodes airing.";
+        var description = "No episodes airing.";
+
+        if (episodesAiring.Count <= 0)
+        {
+            return new EmbedProperties
+            {
+                Title = $"Schedule for {targetDate:dddd} (UTC+0)",
+                Color = new Color(
+                    (byte)short.Parse(configuration["EmbedColours:Red"]!),
+                    (byte)short.Parse(configuration["EmbedColours:Green"]!),
+                    (byte)short.Parse(configuration["EmbedColours:Blue"]!)),
+                Description = description
+            };
+        }
+
+        var groupedEpisodes = episodesAiring.GroupBy(e => new { e.AnimeId, e.AiringAtUtc })
+                                            .Select(g => g.ToList());
+
+        // Pokemon Concierge
+        var descriptionList = (from @group in groupedEpisodes let firstEpisode = @group.First() select @group.Count > 1
+                                   ? $"**{firstEpisode.Anime!.Title}**\n{firstEpisode.AiringAtUtc:HH:mm}"
+                                   : $"**{firstEpisode.Anime!.Title} {firstEpisode.EpisodeNumber}**\n{firstEpisode.AiringAtUtc:HH:mm}")
+           .ToList();
+
+        description = string.Join("\n", descriptionList);
 
         return new EmbedProperties
         {
