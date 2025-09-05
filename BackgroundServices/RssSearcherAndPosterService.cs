@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using IchigoHoshimiya.Context;
 using IchigoHoshimiya.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace IchigoHoshimiya.BackgroundServices;
 
-public class RssSearcherAndPosterService(
+public partial class RssSearcherAndPosterService(
     IServiceScopeFactory scopeFactory,
     HttpClient httpClient,
     IConfiguration configuration,
@@ -76,10 +77,12 @@ public class RssSearcherAndPosterService(
 
                 if (result?.Results is not null)
                 {
+                    var normalizedSearchString = NormalizeSearchString(reminder.SearchString);
+                    var searchTerms = normalizedSearchString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    
                     var matches = result.Results
-                                        .Where(j => j.Title.Contains(
-                                             reminder.SearchString,
-                                             StringComparison.OrdinalIgnoreCase))
+                                        .Where(j => searchTerms.All(term => 
+                                             NormalizeSearchString(j.Title).Contains(term, StringComparison.OrdinalIgnoreCase)))
                                         .ToList();
 
                     if (matches.Count > 0)
@@ -102,6 +105,16 @@ public class RssSearcherAndPosterService(
             }
         }
     }
+    
+    private static string NormalizeSearchString(string input)
+    {
+        var normalized = input
+                        .Replace('é', 'e')
+                        .Replace('\'', ' ')
+                        .Replace('!', ' ');
+        
+        return NormalizerRegex().Replace(normalized, " ").Trim();
+    }
 
     private class JackettResponse
     {
@@ -114,4 +127,7 @@ public class RssSearcherAndPosterService(
         public string Details { get; set; } = string.Empty;
         public string InfoHash { get; set; } = string.Empty;
     }
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex NormalizerRegex();
 }
