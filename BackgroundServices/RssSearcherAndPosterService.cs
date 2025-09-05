@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using IchigoHoshimiya.Context;
 using IchigoHoshimiya.Interfaces;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,7 +55,7 @@ public partial class RssSearcherAndPosterService(
         {
             var encodedQuery = Uri.EscapeDataString(reminder.SearchString);
             var fullUrl = $"{jackettUrl}&Query={encodedQuery}&_={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-            
+
             try
             {
                 var response = await httpClient.GetAsync(fullUrl, stoppingToken);
@@ -77,12 +78,10 @@ public partial class RssSearcherAndPosterService(
 
                 if (result?.Results is not null)
                 {
-                    var normalizedSearchString = NormalizeSearchString(reminder.SearchString);
-                    var searchTerms = normalizedSearchString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    
+                    var regexPattern = BuildSearchPattern(reminder.SearchString);
+
                     var matches = result.Results
-                                        .Where(j => searchTerms.All(term => 
-                                             NormalizeSearchString(j.Title).Contains(term, StringComparison.OrdinalIgnoreCase)))
+                                        .Where(j => regexPattern.IsMatch(j.Title))
                                         .ToList();
 
                     if (matches.Count > 0)
@@ -105,15 +104,32 @@ public partial class RssSearcherAndPosterService(
             }
         }
     }
-    
+
+    private static Regex BuildSearchPattern(string searchString)
+    {
+        var normalizedSearchString = NormalizeSearchString(searchString);
+
+        var searchTerms = normalizedSearchString.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        var pattern = string.Join(".*", searchTerms.Select(term => @$"\b{Regex.Escape(term)}\b"));
+
+        return new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    }
+
     private static string NormalizeSearchString(string input)
     {
-        var normalized = input.ToLowerInvariant(); 
-        
+        var normalized = input.ToLowerInvariant();
+
         normalized = NonAlphanumericRegex().Replace(normalized, " ");
-        
+
         return SpaceReducerRegex().Replace(normalized, " ").Trim();
     }
+
+    [GeneratedRegex("[^a-zA-Z0-9 ]+")]
+    private static partial Regex NonAlphanumericRegex();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex SpaceReducerRegex();
 
     private class JackettResponse
     {
@@ -122,14 +138,10 @@ public partial class RssSearcherAndPosterService(
 
     private class JackettResult
     {
-        public string Title { get; set; } = string.Empty;
-        public string Details { get; set; } = string.Empty;
-        public string InfoHash { get; set; } = string.Empty;
-    }
-    
-    [GeneratedRegex("[^a-zA-Z0-9 ]+")]
-    private static partial Regex NonAlphanumericRegex();
+        [UsedImplicitly] public string Title { get; set; } = string.Empty;
 
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex SpaceReducerRegex();
+        [UsedImplicitly] public string Details { get; set; } = string.Empty;
+
+        [UsedImplicitly] public string InfoHash { get; set; } = string.Empty;
+    }
 }
