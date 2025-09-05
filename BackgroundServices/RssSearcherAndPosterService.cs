@@ -108,12 +108,11 @@ public partial class RssSearcherAndPosterService(
     
     private static string NormalizeSearchString(string input)
     {
-        var normalized = input
-                        .Replace('é', 'e')
-                        .Replace('\'', ' ')
-                        .Replace('!', ' ');
+        var normalized = input.ToLowerInvariant(); 
         
-        return NormalizerRegex().Replace(normalized, " ").Trim();
+        normalized = NonAlphanumericRegex().Replace(normalized, " ");
+        
+        return SpaceReducerRegex().Replace(normalized, " ").Trim();
     }
 
     private class JackettResponse
@@ -127,7 +126,10 @@ public partial class RssSearcherAndPosterService(
         public string Details { get; set; } = string.Empty;
         public string InfoHash { get; set; } = string.Empty;
     }
+    
+    [GeneratedRegex("[^a-zA-Z0-9 ]+")]
+    private static partial Regex NonAlphanumericRegex();
 
     [GeneratedRegex(@"\s+")]
-    private static partial Regex NormalizerRegex();
+    private static partial Regex SpaceReducerRegex();
 }
