@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using FuzzySharp;
 
 namespace IchigoHoshimiya.BackgroundServices;
 
@@ -53,54 +54,75 @@ public partial class RssSearcherAndPosterService(
 
         foreach (var reminder in reminders)
         {
-            var encodedQuery = Uri.EscapeDataString(reminder.SearchString);
-            var fullUrl = $"{jackettUrl}&Query={encodedQuery}&_={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+            var reminderQueries = reminder.SearchString
+                                          .Split(
+                                               '/',
+                                               StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            try
+            foreach (var query in reminderQueries)
             {
-                var response = await httpClient.GetAsync(fullUrl, stoppingToken);
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadAsStringAsync(stoppingToken);
-
-                JackettResponse? result;
+                var encodedQuery = Uri.EscapeDataString(query);
+                var fullUrl = $"{jackettUrl}&Query={encodedQuery}&_={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 
                 try
                 {
-                    result = JsonSerializer.Deserialize<JackettResponse>(content);
-                }
-                catch (JsonException ex)
-                {
-                    Console.WriteLine($"Failed to deserialize Jackett response: {ex.Message}");
+                    var response = await httpClient.GetAsync(fullUrl, stoppingToken);
+                    response.EnsureSuccessStatusCode();
 
-                    continue;
-                }
+                    var content = await response.Content.ReadAsStringAsync(stoppingToken);
 
-                if (result?.Results is not null)
-                {
-                    var regexPattern = BuildSearchPattern(reminder.SearchString);
+                    JackettResponse? result;
 
-                    var matches = result.Results
-                                        .Where(j => regexPattern.IsMatch(j.Title))
-                                        .ToList();
-
-                    if (matches.Count > 0)
+                    try
                     {
-                        var matchedRecord = matches.First();
+                        result = JsonSerializer.Deserialize<JackettResponse>(content);
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Failed to deserialize Jackett response: {ex.Message}");
 
-                        reminder.Enabled = false;
+                        continue;
+                    }
 
-                        await client.SendMessageAsync(
-                            (ulong)reminder.ChannelId,
-                            $"Hey <@{reminder.CreatedById}> {reminder.Mentions}, **{reminder.SearchString}** just dropped:\n{matchedRecord.Details}\n{matchedRecord.InfoHash}");
+                    if (result?.Results is not null)
+                    {
+                        var regexPattern = BuildSearchPattern(query);
 
-                        await dbContext.SaveChangesAsync(stoppingToken);
+                        var oneWeekAgo = DateTimeOffset.UtcNow.AddDays(-7);
+
+                        var matches = result.Results
+                                            .Where(j => !j.Title.Contains("[CAM]", StringComparison.OrdinalIgnoreCase))
+                                            .Where(j => regexPattern.IsMatch(j.Title))
+                                            .Where(j => j.PublishDate >= oneWeekAgo)
+                                            .ToList();
+                        
+                        if (matches.Count == 0)
+                        {
+                            matches = result.Results
+                                            .Where(j => !j.Title.Contains("[CAM]", StringComparison.OrdinalIgnoreCase))
+                                            .Where(j => j.PublishDate >= oneWeekAgo)
+                                            .Where(j => IsFuzzyMatch(query, j.Title))
+                                            .ToList();
+                        }
+
+                        if (matches.Count > 0)
+                        {
+                            var matchedRecord = matches.First();
+
+                            reminder.Enabled = false;
+
+                            await client.SendMessageAsync(
+                                (ulong)reminder.ChannelId,
+                                $"Hey <@{reminder.CreatedById}> {reminder.Mentions}, **{query}** just dropped:\n{matchedRecord.Details}\n{matchedRecord.InfoHash}");
+
+                            await dbContext.SaveChangesAsync(stoppingToken);
+                        }
                     }
                 }
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"Error calling jackett for '{reminder.SearchString}': {ex.Message}");
+                catch (HttpRequestException ex)
+                {
+                    Console.WriteLine($"Error calling jackett for '{query}': {ex.Message}");
+                }
             }
         }
     }
@@ -124,6 +146,34 @@ public partial class RssSearcherAndPosterService(
 
         return SpaceReducerRegex().Replace(normalized, " ").Trim();
     }
+    
+    private static bool IsFuzzyMatch(string query, string title)
+    {
+        var normalizedQuery = NormalizeSearchString(query);
+        var normalizedTitle = NormalizeSearchString(title);
+        
+        var junkTokens = new[]
+        {
+            "1080p", "720p", "480p", "x264", "x265", "hevc",
+            "bluray", "webrip", "webdl", "engsub", "dub", "sub"
+        };
+
+        normalizedTitle = junkTokens.Aggregate(
+            normalizedTitle,
+            (current, junk) => Regex.Replace(
+                current,
+                @$"\b{Regex.Escape(junk)}\b",
+                "",
+                RegexOptions.IgnoreCase));
+        
+        var score = Fuzz.TokenSetRatio(normalizedQuery, normalizedTitle);
+        
+        var queryTokenCount = normalizedQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+        var threshold = queryTokenCount <= 3 ? 95 : 90;
+
+        return score >= threshold;
+    }
+
 
     [GeneratedRegex("[^a-zA-Z0-9 ]+")]
     private static partial Regex NonAlphanumericRegex();
@@ -143,5 +193,7 @@ public partial class RssSearcherAndPosterService(
         [UsedImplicitly] public string Details { get; set; } = string.Empty;
 
         [UsedImplicitly] public string InfoHash { get; set; } = string.Empty;
+
+        [UsedImplicitly] public DateTimeOffset PublishDate { get; set; }
     }
 }
