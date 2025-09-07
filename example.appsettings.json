@@ -14,5 +14,6 @@
     "Green": 239,
     "Blue": 120
   },
-  "jackettUrl": "http://localhost:9117/api/v2.0/indexers/all/results?apikey=<your-api-key>&Tracker[]=nyaasi"
+  "JackettUrl": "http://localhost:9117/api/v2.0/indexers/all/results?apikey=<your-api-key>&Tracker[]=nyaasi",
+  "AirtimeChangeChannel": 514216176029532162
 }

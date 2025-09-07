@@ -2,7 +2,9 @@ using System.Text;
 using System.Text.Json;
 using IchigoHoshimiya.Context;
 using IchigoHoshimiya.Entities.AniList;
+using IchigoHoshimiya.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -31,6 +33,7 @@ public record AiringNode(long AiringAt, int Episode);
 public class SeasonalCalendarDbUpdateService(
     ILogger<AnimeThemesDbUpdateService> logger,
     HttpClient httpClient,
+    IConfiguration configuration,
     IServiceScopeFactory scopeFactory) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,9 +41,9 @@ public class SeasonalCalendarDbUpdateService(
         logger.LogInformation("AnimeThemes Update Service is starting.");
 
         // Run immediately at startup
-        #if RELEASE
+#if RELEASE
         await GetSeasonalCalendarAsync(stoppingToken);
-        #endif
+#endif
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -66,7 +69,7 @@ public class SeasonalCalendarDbUpdateService(
         var query = await File.ReadAllTextAsync("Queries/Anilist/SeasonalsQuery.graphql", stoppingToken);
 
         var (startDate, endDate) = GetCurrentYearFuzzyDates();
-        
+
         var allMedia = new List<Media>();
         var page = 1;
         var hasNextPage = true;
@@ -113,7 +116,7 @@ public class SeasonalCalendarDbUpdateService(
         Console.WriteLine($"Finished fetching. Total entries: {allMedia.Count}");
 
         var anilistIds = allMedia.Select(m => m.Id).ToHashSet();
-        
+
         using var scope = scopeFactory.CreateScope();
 
         var dbContext = scope.ServiceProvider.GetRequiredService<IchigoContext>();
@@ -131,13 +134,31 @@ public class SeasonalCalendarDbUpdateService(
             {
                 // In case the db changes the title, let's update it in any case
                 ea.Title = media.Title.Romaji;
-                
+
                 var existingEpisodes = ea.AiringEpisodes.ToDictionary(e => e.EpisodeNumber);
 
                 foreach (var scheduleNode in media.AiringSchedule.Nodes)
                 {
                     if (existingEpisodes.TryGetValue(scheduleNode.Episode, out var existingEpisode))
                     {
+                        var newAiringAtUtc = DateTimeOffset.FromUnixTimeSeconds(scheduleNode.AiringAt).UtcDateTime;
+
+                        var difference = (newAiringAtUtc - existingEpisode.AiringAtUtc).Duration();
+
+                        if (difference > TimeSpan.FromHours(24))
+                        {
+                            var client = scope.ServiceProvider.GetRequiredService<IClient>();
+
+                            var channelId = ulong.Parse(configuration["AirtimeChangeChannel"]!);
+
+                            await client.SendMessageAsync(
+                                channelId,
+                                $"The airing time for **{media.Title.Romaji} Episode {scheduleNode.Episode}** has changed " +
+                                $"from <t:{new DateTimeOffset(existingEpisode.AiringAtUtc).ToUnixTimeSeconds()}:F> " +
+                                $"to <t:{new DateTimeOffset(newAiringAtUtc).ToUnixTimeSeconds()}:F>."
+                            );
+                        }
+
                         // Update episode if airing time changed
                         existingEpisode.AiringAtUtc =
                             DateTimeOffset.FromUnixTimeSeconds(scheduleNode.AiringAt).UtcDateTime;
@@ -171,12 +192,12 @@ public class SeasonalCalendarDbUpdateService(
                 animeToAdd.Add(newAnime);
             }
         }
-        
+
         if (animeToAdd.Count != 0)
         {
             await dbContext.AiringAnime.AddRangeAsync(animeToAdd, stoppingToken);
         }
-        
+
         var changes = await dbContext.SaveChangesAsync(stoppingToken);
         Console.WriteLine($"Database synchronization complete. {changes} changes saved.");
     }
