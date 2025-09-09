@@ -132,48 +132,54 @@ public class SeasonalCalendarDbUpdateService(
         {
             if (existingAnime.TryGetValue(media.Id, out var ea))
             {
-                // In case the db changes the title, let's update it in any case
                 ea.Title = media.Title.Romaji;
 
                 var existingEpisodes = ea.AiringEpisodes.ToDictionary(e => e.EpisodeNumber);
+                var hasNotifiedForShift = false;
 
-                foreach (var scheduleNode in media.AiringSchedule.Nodes)
+                foreach (var scheduleNode in media.AiringSchedule.Nodes.OrderBy(n => n.Episode))
                 {
+                    var newAiringAtUtc = DateTimeOffset.FromUnixTimeSeconds(scheduleNode.AiringAt).UtcDateTime;
+                    
+                    if (newAiringAtUtc < DateTime.UtcNow)
+                    {
+                        continue;
+                    }
+
                     if (existingEpisodes.TryGetValue(scheduleNode.Episode, out var existingEpisode))
                     {
-                        var newAiringAtUtc = DateTimeOffset.FromUnixTimeSeconds(scheduleNode.AiringAt).UtcDateTime;
-
                         var difference = (newAiringAtUtc - existingEpisode.AiringAtUtc).Duration();
 
                         if (difference > TimeSpan.FromHours(24))
                         {
-                            var client = scope.ServiceProvider.GetRequiredService<IClient>();
+                            if (!hasNotifiedForShift)
+                            {
+                                var client = scope.ServiceProvider.GetRequiredService<IClient>();
+                                var channelId = ulong.Parse(configuration["AirtimeChangeChannel"]!);
 
-                            var channelId = ulong.Parse(configuration["AirtimeChangeChannel"]!);
+                                await client.SendMessageAsync(
+                                    channelId,
+                                    $"The airing time for **{media.Title.Romaji} Episode {scheduleNode.Episode}** has changed " +
+                                    $"from <t:{new DateTimeOffset(existingEpisode.AiringAtUtc).ToUnixTimeSeconds()}:F> " +
+                                    $"to <t:{new DateTimeOffset(newAiringAtUtc).ToUnixTimeSeconds()}:F>."
+                                );
 
-                            await client.SendMessageAsync(
-                                channelId,
-                                $"The airing time for **{media.Title.Romaji} Episode {scheduleNode.Episode}** has changed " +
-                                $"from <t:{new DateTimeOffset(existingEpisode.AiringAtUtc).ToUnixTimeSeconds()}:F> " +
-                                $"to <t:{new DateTimeOffset(newAiringAtUtc).ToUnixTimeSeconds()}:F>."
-                            );
+                                hasNotifiedForShift = true;
+                            }
                         }
 
-                        // Update episode if airing time changed
-                        existingEpisode.AiringAtUtc =
-                            DateTimeOffset.FromUnixTimeSeconds(scheduleNode.AiringAt).UtcDateTime;
+                        existingEpisode.AiringAtUtc = newAiringAtUtc;
                     }
                     else
                     {
-                        // Add new episodes that popped up
-                        ea.AiringEpisodes.Add(
-                            new AiringEpisode
-                            {
-                                EpisodeNumber = scheduleNode.Episode,
-                                AiringAtUtc = DateTimeOffset.FromUnixTimeSeconds(scheduleNode.AiringAt).UtcDateTime
-                            });
+                        ea.AiringEpisodes.Add(new AiringEpisode
+                        {
+                            EpisodeNumber = scheduleNode.Episode,
+                            AiringAtUtc = newAiringAtUtc
+                        });
                     }
                 }
+
             }
             else
             {
@@ -192,6 +198,7 @@ public class SeasonalCalendarDbUpdateService(
                 animeToAdd.Add(newAnime);
             }
         }
+
 
         if (animeToAdd.Count != 0)
         {
