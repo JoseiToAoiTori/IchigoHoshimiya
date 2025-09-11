@@ -27,7 +27,7 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
 
         for (var i = 0; i < fuzzyMatchesDto.Count; i++)
         {
-            AnimethemeDto match = fuzzyMatchesDto[i];
+            var match = fuzzyMatchesDto[i];
 
             embedDescriptionBuilder.AppendLine(
                 $"{i + 1}. [{match.Anime} {match.Slug} - {match.Theme}]({match.Link})"
@@ -46,14 +46,14 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
 
     public string GetAnimetheme(string query, string? slug)
     {
-        List<AnimethemeDto> fuzzyMatchesDto = GetFuzzyMatches(query, 5, slug);
+        var fuzzyMatchesDto = GetFuzzyMatches(query, 5, slug);
 
         if (fuzzyMatchesDto.Count == 0)
         {
             return "No matches found for your query";
         }
 
-        AnimethemeDto firstMatch = fuzzyMatchesDto[0];
+        var firstMatch = fuzzyMatchesDto[0];
 
         return $"{firstMatch.Anime} {firstMatch.Slug} - {firstMatch.Theme}\n{firstMatch.Link}";
     }
@@ -82,29 +82,29 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
     // Clean up in the future for sure copium
     private List<AnimethemeDto> GetFuzzyMatches(string query, int count, string? slug)
     {
-        IQueryable<AnimeThemeEntry> builderQuery = dbContext.AnimeThemeEntries
-                                                            .AsSplitQuery()
-                                                            .Include(e => e.Theme)
-                                                            .ThenInclude(t => t.Song)
-                                                            .Include(e => e.Theme)
-                                                            .ThenInclude(t => t.Anime)
-                                                            .ThenInclude(a => a.AnimeSynonyms)
-                                                            .Include(e => e.AnimeThemeEntryVideos)
-                                                            .ThenInclude(v => v.Video)
-                                                            .Where(e => e.Theme.Song != null)
-                                                            .Where(e => e.AnimeThemeEntryVideos.Any());
+        var builderQuery = dbContext.AnimeThemeEntries
+                                    .AsSplitQuery()
+                                    .Include(e => e.Theme)
+                                    .ThenInclude(t => t.Song)
+                                    .Include(e => e.Theme)
+                                    .ThenInclude(t => t.Anime)
+                                    .ThenInclude(a => a.AnimeSynonyms)
+                                    .Include(e => e.AnimeThemeEntryVideos)
+                                    .ThenInclude(v => v.Video)
+                                    .Where(e => e.Theme.Song != null)
+                                    .Where(e => e.AnimeThemeEntryVideos.Any());
 
         if (!string.IsNullOrWhiteSpace(slug))
         {
             builderQuery = builderQuery.Where(e => e.Theme.Slug == slug);
         }
 
-        List<AnimeThemeEntry> candidates = builderQuery.ToList();
+        var candidates = builderQuery.ToList();
 
-        string normalizedQuery = Normalize(query);
-        string[] queryTokens = normalizedQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        bool multiToken = queryTokens.Length > 1;
-        string firstToken = queryTokens.FirstOrDefault() ?? normalizedQuery;
+        var normalizedQuery = Normalize(query);
+        var queryTokens = normalizedQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var multiToken = queryTokens.Length > 1;
+        var firstToken = queryTokens.FirstOrDefault() ?? normalizedQuery;
 
         var scored = candidates.AsParallel()
                                .Select(e =>
@@ -181,7 +181,7 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                         weightedScore += 10;
                                     }
 
-                                    bool allTokensInAnime = queryTokens.All(t =>
+                                    var allTokensInAnime = queryTokens.All(t =>
                                         animeName.Contains(t, StringComparison.OrdinalIgnoreCase) ||
                                         synonyms.Any(s => s.Contains(t, StringComparison.OrdinalIgnoreCase))
                                     );
@@ -221,11 +221,11 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                                .ToList();
 
 
-        List<AnimeThemeEntry> fuzzyMatches = scored
-                                            .OrderByDescending(x => x.Score)
-                                            .Take(count)
-                                            .Select(x => x.Entry)
-                                            .ToList();
+        var fuzzyMatches = scored
+                          .OrderByDescending(x => x.Score)
+                          .Take(count)
+                          .Select(x => x.Entry)
+                          .ToList();
 
         return ToDto(fuzzyMatches);
 
@@ -236,14 +236,14 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                 return "";
             }
 
-            string lowered = input.ToLowerInvariant();
+            var lowered = input.ToLowerInvariant();
 
-            char[] chars = lowered.Select(c =>
-                                       char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)
-                                           ? c
-                                           : ' '
-                                   )
-                                  .ToArray();
+            var chars = lowered.Select(c =>
+                                    char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)
+                                        ? c
+                                        : ' '
+                                )
+                               .ToArray();
 
             return string.Join(
                 " ",

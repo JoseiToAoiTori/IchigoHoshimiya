@@ -71,7 +71,7 @@ public class AnimeThemesDbUpdateService(
         {
             logger.LogInformation("Starting database update...");
 
-            string? dumpUrl = await GetDumpUrlAsync(stoppingToken);
+            var dumpUrl = await GetDumpUrlAsync(stoppingToken);
 
             if (string.IsNullOrEmpty(dumpUrl))
             {
@@ -108,7 +108,7 @@ public class AnimeThemesDbUpdateService(
         response.EnsureSuccessStatusCode();
 
         var gqlResponse = await response.Content.ReadFromJsonAsync<GraphQlResponse>(cancellationToken);
-        string? link = gqlResponse?.Data.Paginator.Data.FirstOrDefault()?.Link;
+        var link = gqlResponse?.Data.Paginator.Data.FirstOrDefault()?.Link;
 
         logger.LogInformation("Found dump URL: {Link}", link);
 

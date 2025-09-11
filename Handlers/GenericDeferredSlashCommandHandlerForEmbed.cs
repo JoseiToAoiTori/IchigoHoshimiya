@@ -12,9 +12,9 @@ public class GenericDeferredSlashCommandHandlerForEmbed(
     {
         await context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
 
-        EmbedProperties embed = await contentFunction();
+        var embed = await contentFunction();
 
-        MessageProperties props = new MessageProperties()
+        var props = new MessageProperties()
            .WithEmbeds([embed]);
 
         await context.Interaction.ModifyResponseAsync(message => message.Embeds = [embed]);
