@@ -16,7 +16,6 @@ public class MessageCreateHandler(IClient client, ITwitterReplacementService twi
             return ValueTask.CompletedTask;
         }
 
-        // I think discord now has button support for messages, so can we show a button to the user to delete the message?
         HandleTwitter(message, message.Author.Username);
 
         return ValueTask.CompletedTask;
@@ -26,7 +25,7 @@ public class MessageCreateHandler(IClient client, ITwitterReplacementService twi
     {
         try
         {
-            string? newContent = await twitterReplacementService.GetReplacedContentAsync(message.Content, username);
+            var newContent = await twitterReplacementService.GetReplacedContentAsync(message.Content, username);
 
             if (newContent is null)
             {

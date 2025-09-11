@@ -9,4 +9,6 @@ public interface IClient
     Task SendEmbedMessageAsync(ulong channelId, MessageProperties messageProperties);
 
     Task DeleteMessageAsync(ulong channelId, ulong messageId);
+
+    Task<RestMessage> GetMessageAsync(ulong channelId, ulong messageId);
 }

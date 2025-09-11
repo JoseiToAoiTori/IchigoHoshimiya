@@ -20,4 +20,11 @@ public class RestClientAdapter(RestClient restClient) : IClient
     {
         return restClient.DeleteMessageAsync(channelId, messageId);
     }
+
+    public async Task<RestMessage> GetMessageAsync(ulong channelId, ulong messageId)
+    {
+        var message = await restClient.GetMessageAsync(channelId, messageId);
+
+        return message;
+    }
 }
