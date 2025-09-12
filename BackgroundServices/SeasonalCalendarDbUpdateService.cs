@@ -140,7 +140,7 @@ public class SeasonalCalendarDbUpdateService(
                 foreach (var scheduleNode in media.AiringSchedule.Nodes.OrderBy(n => n.Episode))
                 {
                     var newAiringAtUtc = DateTimeOffset.FromUnixTimeSeconds(scheduleNode.AiringAt).UtcDateTime;
-                    
+
                     if (newAiringAtUtc < DateTime.UtcNow)
                     {
                         continue;
@@ -150,7 +150,7 @@ public class SeasonalCalendarDbUpdateService(
                     {
                         var difference = (newAiringAtUtc - existingEpisode.AiringAtUtc).Duration();
 
-                        if (difference > TimeSpan.FromHours(24))
+                        if (newAiringAtUtc > existingEpisode.AiringAtUtc && difference > TimeSpan.FromHours(24))
                         {
                             if (!hasNotifiedForShift)
                             {
@@ -159,7 +159,7 @@ public class SeasonalCalendarDbUpdateService(
 
                                 await client.SendMessageAsync(
                                     channelId,
-                                    $"The airing time for **{media.Title.Romaji} Episode {scheduleNode.Episode}** has changed " +
+                                    $"The airing time for **{media.Title.Romaji} Episode {scheduleNode.Episode}** has been delayed " +
                                     $"from <t:{new DateTimeOffset(existingEpisode.AiringAtUtc).ToUnixTimeSeconds()}:F> " +
                                     $"to <t:{new DateTimeOffset(newAiringAtUtc).ToUnixTimeSeconds()}:F>."
                                 );
@@ -172,14 +172,14 @@ public class SeasonalCalendarDbUpdateService(
                     }
                     else
                     {
-                        ea.AiringEpisodes.Add(new AiringEpisode
-                        {
-                            EpisodeNumber = scheduleNode.Episode,
-                            AiringAtUtc = newAiringAtUtc
-                        });
+                        ea.AiringEpisodes.Add(
+                            new AiringEpisode
+                            {
+                                EpisodeNumber = scheduleNode.Episode,
+                                AiringAtUtc = newAiringAtUtc
+                            });
                     }
                 }
-
             }
             else
             {
