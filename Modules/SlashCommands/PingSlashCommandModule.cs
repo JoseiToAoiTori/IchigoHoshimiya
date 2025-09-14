@@ -4,7 +4,6 @@ using NetCord.Services.ApplicationCommands;
 
 namespace IchigoHoshimiya.Modules.SlashCommands;
 
-[UsedImplicitly]
 public class PingSlashCommandModule(IPingService pingService) : ApplicationCommandModule<ApplicationCommandContext>
 {
     [SlashCommand("ping", "Pong!")]

@@ -23,7 +23,6 @@ public enum CalendarDay
     Saturday
 }
 
-[UsedImplicitly]
 public class CalendarSlashCommandModule(ICalendarService calendarService)
     : ApplicationCommandModule<ApplicationCommandContext>
 {

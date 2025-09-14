@@ -48,6 +48,7 @@ builder.Services.AddSingleton<ITwitterReplacementService, TwitterReplacementServ
 builder.Services.AddScoped<IAnimethemeService, AnimethemeService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<IRssService, RssService>();
+builder.Services.AddScoped<IChooseService, ChooseService>();
 
 builder.Services
        .AddDiscordGateway(options =>
