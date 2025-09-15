@@ -1,4 +1,5 @@
 using IchigoHoshimiya.Context;
+using IchigoHoshimiya.Helpers;
 using IchigoHoshimiya.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,15 +46,7 @@ public class CalendarService(IchigoContext dbContext, IConfiguration configurati
 
         if (episodesAiring.Count <= 0)
         {
-            return new EmbedProperties
-            {
-                Title = $"Schedule for {targetDate:dddd} (UTC+0)",
-                Color = new Color(
-                    (byte)short.Parse(configuration["EmbedColours:Red"]!),
-                    (byte)short.Parse(configuration["EmbedColours:Green"]!),
-                    (byte)short.Parse(configuration["EmbedColours:Blue"]!)),
-                Description = description
-            };
+            return EmbedHelper.Build($"Schedule for {targetDate:dddd} (UTC+0)", description);
         }
 
         var groupedEpisodes = episodesAiring.GroupBy(e => new { e.AnimeId, e.AiringAtUtc })
@@ -66,15 +59,7 @@ public class CalendarService(IchigoContext dbContext, IConfiguration configurati
            .ToList();
 
         description = string.Join("\n", descriptionList);
-
-        return new EmbedProperties
-        {
-            Title = $"Schedule for {targetDate:dddd} (UTC+0)",
-            Color = new Color(
-                (byte)short.Parse(configuration["EmbedColours:Red"]!),
-                (byte)short.Parse(configuration["EmbedColours:Green"]!),
-                (byte)short.Parse(configuration["EmbedColours:Blue"]!)),
-            Description = description
-        };
+        
+        return EmbedHelper.Build($"Schedule for {targetDate:dddd} (UTC+0)", description);
     }
 }

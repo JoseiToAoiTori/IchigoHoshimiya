@@ -1,3 +1,4 @@
+using IchigoHoshimiya.Helpers;
 using IchigoHoshimiya.Interfaces;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
@@ -33,14 +34,7 @@ public class OwnerCommandModule(IClient ichigoClient, IConfiguration configurati
     {
         MessageProperties props = new ()
         {
-            Embeds = [new EmbedProperties
-            {
-                Color = new Color(
-                    (byte)short.Parse(configuration["EmbedColours:Red"]!),
-                    (byte)short.Parse(configuration["EmbedColours:Green"]!),
-                    (byte)short.Parse(configuration["EmbedColours:Blue"]!)),
-                Description = text
-            }]
+            Embeds = [EmbedHelper.Build(null, text)]
         };
         await ichigoClient.EditEmbedMessageAsync(ulong.Parse(channelId), ulong.Parse(messageId), props);
     }

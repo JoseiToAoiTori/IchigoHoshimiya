@@ -1,6 +1,7 @@
 ﻿using IchigoHoshimiya.Adapters;
 using IchigoHoshimiya.BackgroundServices;
 using IchigoHoshimiya.Context;
+using IchigoHoshimiya.Helpers;
 using IchigoHoshimiya.Interfaces;
 using IchigoHoshimiya.Services;
 using Microsoft.EntityFrameworkCore;
@@ -69,6 +70,12 @@ builder.Services
        .AddGatewayHandlers(typeof(Program).Assembly);
 
 var host = builder.Build();
+
+var colours = builder.Configuration
+                     .GetSection("EmbedColours")
+                     .Get<EmbedColours>();
+
+EmbedHelper.Initialize(colours);
 
 // NetCord: Add commands from modules
 host.AddModules(typeof(Program).Assembly);

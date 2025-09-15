@@ -3,6 +3,7 @@ using FuzzySharp;
 using IchigoHoshimiya.Context;
 using IchigoHoshimiya.DTO;
 using IchigoHoshimiya.Entities.Animethemes;
+using IchigoHoshimiya.Helpers;
 using IchigoHoshimiya.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +16,7 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
 {
     public EmbedProperties GetAllAnimethemes(string query, string? slug)
     {
-        List<AnimethemeDto> fuzzyMatchesDto = GetFuzzyMatches(query, 10, slug);
+        var fuzzyMatchesDto = GetFuzzyMatches(query, 10, slug);
 
         if (fuzzyMatchesDto.Count == 0)
         {
@@ -33,15 +34,8 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
                 $"{i + 1}. [{match.Anime} {match.Slug} - {match.Theme}]({match.Link})"
             );
         }
-
-        return new EmbedProperties()
-              .WithTitle("Your search results")
-              .WithColor(
-                   new Color(
-                       (byte)short.Parse(configuration["EmbedColours:Red"]!),
-                       (byte)short.Parse(configuration["EmbedColours:Green"]!),
-                       (byte)short.Parse(configuration["EmbedColours:Blue"]!)))
-              .WithDescription(embedDescriptionBuilder.ToString());
+        
+        return EmbedHelper.Build("Your search results",  embedDescriptionBuilder.ToString());
     }
 
     public string GetAnimetheme(string query, string? slug)
@@ -62,10 +56,10 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
     {
         return themes.Select(theme =>
                       {
-                          Video? highestResVideo = theme.AnimeThemeEntryVideos
-                                                        .Select(entryVideo => entryVideo.Video)
-                                                        .OrderByDescending(video => video.Resolution)
-                                                        .FirstOrDefault();
+                          var highestResVideo = theme.AnimeThemeEntryVideos
+                                                     .Select(entryVideo => entryVideo.Video)
+                                                     .OrderByDescending(video => video.Resolution)
+                                                     .FirstOrDefault();
 
                           return new AnimethemeDto
                           {
@@ -109,42 +103,42 @@ public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration co
         var scored = candidates.AsParallel()
                                .Select(e =>
                                 {
-                                    string animeName = Normalize(e.Theme.Anime.Name);
+                                    var animeName = Normalize(e.Theme.Anime.Name);
 
-                                    List<string> synonyms = e.Theme.Anime.AnimeSynonyms
-                                                             .Select(s => Normalize(s.Text ?? ""))
-                                                             .ToList();
+                                    var synonyms = e.Theme.Anime.AnimeSynonyms
+                                                    .Select(s => Normalize(s.Text ?? ""))
+                                                    .ToList();
 
-                                    string themeTitle = Normalize(e.Theme.Song?.Title ?? "");
+                                    var themeTitle = Normalize(e.Theme.Song?.Title ?? "");
 
-                                    int animeNameScore = Math.Max(
+                                    var animeNameScore = Math.Max(
                                         Fuzz.TokenSortRatio(normalizedQuery, animeName),
                                         Fuzz.TokenSetRatio(normalizedQuery, animeName)
                                     );
 
-                                    int synonymScore = synonyms.Count > 0
+                                    var synonymScore = synonyms.Count > 0
                                         ? synonyms.Max(s => Math.Max(
                                             Fuzz.TokenSortRatio(normalizedQuery, s),
                                             Fuzz.TokenSetRatio(normalizedQuery, s)
                                         ))
                                         : 0;
 
-                                    int bestAnimeScore = Math.Max(animeNameScore, synonymScore);
+                                    var bestAnimeScore = Math.Max(animeNameScore, synonymScore);
 
-                                    int themeScore1 = Fuzz.TokenSetRatio(normalizedQuery, themeTitle);
-                                    int themeScore2 = Fuzz.PartialRatio(normalizedQuery, themeTitle);
-                                    int bestThemeScore = Math.Max(themeScore1, themeScore2);
+                                    var themeScore1 = Fuzz.TokenSetRatio(normalizedQuery, themeTitle);
+                                    var themeScore2 = Fuzz.PartialRatio(normalizedQuery, themeTitle);
+                                    var bestThemeScore = Math.Max(themeScore1, themeScore2);
 
-                                    int firstTokenAnimeScore = Math.Max(
+                                    var firstTokenAnimeScore = Math.Max(
                                         Fuzz.PartialRatio(firstToken, animeName),
                                         synonyms.Count > 0
                                             ? synonyms.Max(s => Fuzz.PartialRatio(firstToken, s))
                                             : 0
                                     );
 
-                                    bool looksLikeThemeQuery = bestAnimeScore < 50 && bestThemeScore >= 50;
+                                    var looksLikeThemeQuery = bestAnimeScore < 50 && bestThemeScore >= 50;
 
-                                    double weightedScore = looksLikeThemeQuery
+                                    var weightedScore = looksLikeThemeQuery
                                         ? 0.25 * bestAnimeScore + 0.75 * bestThemeScore
                                         : multiToken
                                             ? 0.75 * bestAnimeScore + 0.25 * bestThemeScore

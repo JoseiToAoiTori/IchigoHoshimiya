@@ -50,7 +50,6 @@ public class ThemeSlashCommandModule(IAnimethemeService animethemeService)
 
         return;
 
-        // Define the function that gets the theme.
         Task<string> ThemeFunction()
         {
             return Task.Run(() => animethemeService.GetAnimetheme(query, slug));
