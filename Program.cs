@@ -79,7 +79,7 @@ var colours = builder.Configuration
                      .GetSection("EmbedColours")
                      .Get<EmbedColours>();
 
-EmbedHelper.Initialize(colours);
+EmbedHelper.Initialize(colours!);
 
 // NetCord: Add commands from modules
 host.AddModules(typeof(Program).Assembly);

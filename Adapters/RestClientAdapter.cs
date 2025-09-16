@@ -4,7 +4,7 @@ using NetCord.Rest;
 
 namespace IchigoHoshimiya.Adapters;
 
-public class RestClientAdapter(RestClient restClient, IConfiguration configuration) : IClient
+public class RestClientAdapter(RestClient restClient) : IClient
 {
     public Task SendMessageAsync(ulong channelId, string content)
     {

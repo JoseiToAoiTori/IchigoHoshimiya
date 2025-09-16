@@ -12,7 +12,7 @@ using NetCord.Rest;
 
 namespace IchigoHoshimiya.Services;
 
-public class AnimethemeService(AnimethemesDbContext dbContext, IConfiguration configuration) : IAnimethemeService
+public class AnimethemeService(AnimethemesDbContext dbContext) : IAnimethemeService
 {
     public EmbedProperties GetAllAnimethemes(string query, string? slug)
     {

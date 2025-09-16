@@ -8,7 +8,7 @@ using NetCord.Rest;
 
 namespace IchigoHoshimiya.Services;
 
-public class CalendarService(IchigoContext dbContext, IConfiguration configuration) : ICalendarService
+public class CalendarService(IchigoContext dbContext) : ICalendarService
 {
     public async Task<EmbedProperties> GetCalendar(DayOfWeek? dayOfWeek)
     {

@@ -15,7 +15,8 @@
     "Blue": 120
   },
   "JackettUrl": "http://localhost:9117/api/v2.0/indexers/all/results?apikey=<your-api-key>&Tracker[]=nyaasi",
-  "AirtimeChangeChannel": 514216176029532162,
+  "AirtimeChangeChannel": 1404057572327165952,
   "TouchingGrassRole": 1081781586929922169,
-  "TouchingGrassGuild": 514203145333899276
+  "TouchingGrassGuild": 514203145333899276,
+  "RefugeeBot": true
 }
