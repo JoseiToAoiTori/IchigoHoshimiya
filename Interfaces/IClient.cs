@@ -13,4 +13,8 @@ public interface IClient
     Task DeleteMessageAsync(ulong channelId, ulong messageId);
 
     Task<RestMessage> GetMessageAsync(ulong channelId, ulong messageId);
+
+    Task AddRoleToUser(ulong guildId, ulong userId, ulong roleId);
+
+    Task RemoveRoleFromUser(ulong guildId, ulong userId, ulong roleId);
 }

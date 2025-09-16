@@ -33,6 +33,9 @@ builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
 builder.Services.AddHostedService<SeasonalCalendarDbUpdateService>();
 builder.Services.AddHostedService<RssSearcherAndPosterService>();
 
+builder.Services.AddHostedService<GrassToucherReleaserService>();
+builder.Services.AddSingleton<GrassToucherReleaserService>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 
@@ -50,6 +53,7 @@ builder.Services.AddScoped<IAnimethemeService, AnimethemeService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<IRssService, RssService>();
 builder.Services.AddScoped<IChooseService, ChooseService>();
+builder.Services.AddScoped<ITouchGrassService, TouchGrassService>();
 
 builder.Services
        .AddDiscordGateway(options =>

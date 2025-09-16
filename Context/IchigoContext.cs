@@ -20,4 +20,6 @@ public class IchigoContext : DbContext
     public virtual DbSet<AiringEpisode> AiringEpisodes { get; set; }
 
     public virtual DbSet<RssReminder> RssReminder { get; set; }
+
+    public virtual DbSet<GrassToucher> GrassToucher { get; set; }
 }
