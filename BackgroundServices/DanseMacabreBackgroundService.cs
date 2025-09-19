@@ -49,8 +49,7 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
                     try
                     {
                         await message.DeleteAsync(cancellationToken: stoppingToken);
-                        Console.WriteLine("A message was deleted");
-                        await Task.Delay(1000, stoppingToken);
+                        Console.WriteLine($"A message at {message.CreatedAt} was deleted");
                     }
                     catch (Exception ex)
                     {
@@ -61,7 +60,7 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
                 
                 beforeDateTime = message.CreatedAt;
 
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(2000, stoppingToken);
             }
 
             if (!foundAny)
