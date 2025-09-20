@@ -8,6 +8,7 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
 {
     private readonly DateTimeOffset _cutoffDate = new(2025, 4, 1, 0, 0, 0, TimeSpan.Zero);
     private readonly ulong _guildId = 514203145333899276;
+    private readonly DateTimeOffset _lowerBoundDate = new(2022, 2, 19, 0, 0, 0, TimeSpan.Zero);
     private readonly ulong _userId = 291678129586438144;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -31,6 +32,11 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            if (beforeDateTime <= _lowerBoundDate)
+            {
+                break;
+            }
+
             var pagination = new PaginationProperties<ulong>
             {
                 From = DateTimeToSnowflake(beforeDateTime.Value),
@@ -49,7 +55,7 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
                     try
                     {
                         await message.DeleteAsync(cancellationToken: stoppingToken);
-                        Console.WriteLine($"A message at {message.CreatedAt} was deleted");
+                        Console.WriteLine($"A message at {message.CreatedAt} in channel {message.ChannelId} was deleted");
                     }
                     catch (Exception ex)
                     {
@@ -57,10 +63,10 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
                         await Task.Delay(3000, stoppingToken);
                     }
                 }
-                
+
                 beforeDateTime = message.CreatedAt;
 
-                await Task.Delay(2000, stoppingToken);
+                await Task.Delay(1500, stoppingToken);
             }
 
             if (!foundAny)
@@ -70,7 +76,7 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
         }
     }
 
-    
+
     private static ulong DateTimeToSnowflake(DateTimeOffset dateTime)
     {
         var discordEpoch = new DateTimeOffset(2015, 1, 1, 0, 0, 0, TimeSpan.Zero);
