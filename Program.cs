@@ -33,8 +33,8 @@ builder.Services.AddHostedService<AnimeThemesDbUpdateService>();
 builder.Services.AddHostedService<SeasonalCalendarDbUpdateService>();
 builder.Services.AddHostedService<RssSearcherAndPosterService>();
 
-builder.Services.AddHostedService<GrassToucherReleaserService>();
 builder.Services.AddSingleton<GrassToucherReleaserService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<GrassToucherReleaserService>());
 
 builder.Services.AddHostedService<DanseMacabreBackgroundService>();
 
@@ -56,6 +56,12 @@ builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<IRssService, RssService>();
 builder.Services.AddScoped<IChooseService, ChooseService>();
 builder.Services.AddScoped<ITouchGrassService, TouchGrassService>();
+
+builder.Services.Configure<HostOptions>(o =>
+{
+    o.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
 
 builder.Services
        .AddDiscordGateway(options =>
