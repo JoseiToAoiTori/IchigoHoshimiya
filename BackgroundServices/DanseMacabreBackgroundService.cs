@@ -8,6 +8,16 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
 {
     private readonly DateTimeOffset _cutoffDate = new(2025, 4, 1, 0, 0, 0, TimeSpan.Zero);
     private readonly ulong _guildId = 514203145333899276;
+
+    private readonly HashSet<ulong> _ignoredChannelIds =
+    [
+        514369023568510979,
+        514223283407683584,
+        514215944319401996,
+        514221599965052956,
+        514203145333899278 // general
+    ];
+
     private readonly DateTimeOffset _lowerBoundDate = new(2022, 2, 19, 0, 0, 0, TimeSpan.Zero);
     private readonly ulong _userId = 291678129586438144;
 
@@ -15,7 +25,11 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
     {
         var channels = await restClient.GetGuildChannelsAsync(_guildId, cancellationToken: stoppingToken);
 
-        foreach (var channel in channels)
+        var filtered = channels
+                      .OfType<TextGuildChannel>()
+                      .Where(c => !_ignoredChannelIds.Contains(c.Id));
+
+        foreach (var channel in filtered)
         {
             if (channel is not TextGuildChannel textChannel)
             {
@@ -55,18 +69,19 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
                     try
                     {
                         await message.DeleteAsync(cancellationToken: stoppingToken);
-                        Console.WriteLine($"A message at {message.CreatedAt} in channel {message.ChannelId} was deleted");
+
+                        Console.WriteLine(
+                            $"A message at {message.CreatedAt} in channel {message.ChannelId} was deleted");
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Failed to delete {message.Id} in {channel.Id}: {ex.Message}");
-                        await Task.Delay(3000, stoppingToken);
                     }
                 }
 
                 beforeDateTime = message.CreatedAt;
-
-                await Task.Delay(1500, stoppingToken);
+                // just don't go crazy with it ig
+                await Task.Delay(100, stoppingToken);
             }
 
             if (!foundAny)

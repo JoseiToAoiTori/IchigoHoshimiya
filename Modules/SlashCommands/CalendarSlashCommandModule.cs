@@ -30,22 +30,21 @@ public class CalendarSlashCommandModule(ICalendarService calendarService)
     [UsedImplicitly]
     public async Task GetCalendar(
         [SlashCommandParameter(Name = "dayofweek", Description = "Sunday Monday Chu-Chu Tuesday")]
-        CalendarDay? dayOfWeek =
-            null)
+        CalendarDay? dayOfWeek = null)
     {
         await RespondAsync(InteractionCallback.DeferredMessage());
-        var targetDate = DateTime.UtcNow;
 
-        switch (string.IsNullOrWhiteSpace(dayOfWeek.ToString()))
+        var today = DateTime.UtcNow.Date;
+        DateTime targetDate;
+
+        if (dayOfWeek is null)
         {
-            case false when Enum.TryParse<DayOfWeek>(dayOfWeek.ToString(), true, out var parsedDay):
+            targetDate = today;
+        }
+        else
+        {
+            if (!Enum.TryParse<DayOfWeek>(dayOfWeek.ToString(), true, out var parsedDay))
             {
-                var daysToAdd = (int)parsedDay - (int)targetDate.DayOfWeek;
-                targetDate = targetDate.AddDays(daysToAdd);
-
-                break;
-            }
-            case false:
                 InteractionMessageProperties errorResponse = new()
                 {
                     Content = "Not a valid day of the week"
@@ -54,11 +53,16 @@ public class CalendarSlashCommandModule(ICalendarService calendarService)
                 await Context.Interaction.SendFollowupMessageAsync(errorResponse);
 
                 return;
+            }
+
+            // compute upcoming target date
+            var daysUntilTarget = ((int)parsedDay - (int)today.DayOfWeek + 7) % 7;
+            targetDate = today.AddDays(daysUntilTarget);
         }
 
-        var embed = await calendarService.GetCalendar(targetDate.DayOfWeek);
+        var embed = await calendarService.GetCalendar(targetDate);
 
-        // Hack to maintain state for the arrow buttons
+        // Footer keeps the resolved calendar date
         embed.Footer = new EmbedFooterProperties
         {
             Text = $"Date: {targetDate:yyyy-MM-dd}"
