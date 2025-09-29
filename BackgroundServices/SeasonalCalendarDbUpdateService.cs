@@ -40,9 +40,15 @@ public class SeasonalCalendarDbUpdateService(
     {
         logger.LogInformation("AnimeThemes Update Service is starting.");
 
-        // Run immediately at startup
 #if RELEASE
+    try
+    {
         await GetSeasonalCalendarAsync(stoppingToken);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred during initial run of SeasonalCalendarDbUpdateService");
+    }
 #endif
 
         while (!stoppingToken.IsCancellationRequested)
@@ -58,7 +64,16 @@ public class SeasonalCalendarDbUpdateService(
                 break;
             }
 
-            await GetSeasonalCalendarAsync(stoppingToken);
+            try
+            {
+                await GetSeasonalCalendarAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(
+                    ex,
+                    "Error occurred while running SeasonalCalendarDbUpdateService. Will retry at next interval.");
+            }
         }
     }
 

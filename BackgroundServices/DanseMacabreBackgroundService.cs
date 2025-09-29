@@ -70,6 +70,9 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
                     {
                         await message.DeleteAsync(cancellationToken: stoppingToken);
 
+                        // just don't go crazy with it ig
+                        await Task.Delay(100, stoppingToken);
+
                         Console.WriteLine(
                             $"A message at {message.CreatedAt} in channel {message.ChannelId} was deleted");
                     }
