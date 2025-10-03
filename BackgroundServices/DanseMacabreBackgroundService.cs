@@ -6,7 +6,8 @@ namespace IchigoHoshimiya.BackgroundServices;
 
 public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundService
 {
-    private readonly DateTimeOffset _cutoffDate = new(2025, 4, 1, 0, 0, 0, TimeSpan.Zero);
+    private readonly DateTimeOffset _cutoffDate = new(2023, 2, 20, 0, 0, 0, TimeSpan.Zero);
+    // private readonly DateTimeOffset _cutoffDate = new(2025, 4, 1, 0, 0, 0, TimeSpan.Zero);
     private readonly ulong _guildId = 514203145333899276;
 
     private readonly HashSet<ulong> _ignoredChannelIds =
@@ -83,6 +84,8 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
                 }
 
                 beforeDateTime = message.CreatedAt;
+                Console.WriteLine(
+                    $"Currently reading a message at {message.CreatedAt} in channel {message.ChannelId}");
                 // just don't go crazy with it ig
                 await Task.Delay(100, stoppingToken);
             }
