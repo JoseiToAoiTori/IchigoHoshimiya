@@ -6,8 +6,7 @@ namespace IchigoHoshimiya.BackgroundServices;
 
 public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundService
 {
-    private readonly DateTimeOffset _cutoffDate = new(2023, 2, 20, 0, 0, 0, TimeSpan.Zero);
-    // private readonly DateTimeOffset _cutoffDate = new(2025, 4, 1, 0, 0, 0, TimeSpan.Zero);
+    private readonly DateTimeOffset _cutoffDate = new(2025, 4, 1, 0, 0, 0, TimeSpan.Zero);
     private readonly ulong _guildId = 514203145333899276;
 
     private readonly HashSet<ulong> _ignoredChannelIds =
@@ -16,7 +15,8 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
         514223283407683584,
         514215944319401996,
         514221599965052956,
-        514203145333899278 // general
+        514203145333899278,
+        514215337496150018 // anime
     ];
 
     private readonly DateTimeOffset _lowerBoundDate = new(2022, 2, 19, 0, 0, 0, TimeSpan.Zero);
