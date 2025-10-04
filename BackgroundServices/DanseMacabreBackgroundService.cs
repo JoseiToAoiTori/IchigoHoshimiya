@@ -16,7 +16,8 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
         514215944319401996,
         514221599965052956,
         514203145333899278,
-        514215337496150018 // anime
+        514215337496150018, // anime
+        514215404575653899 // screencaps
     ];
 
     private readonly DateTimeOffset _lowerBoundDate = new(2022, 2, 19, 0, 0, 0, TimeSpan.Zero);
@@ -44,11 +45,13 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
     private async Task ProcessChannelAsync(TextGuildChannel channel, CancellationToken stoppingToken)
     {
         DateTimeOffset? beforeDateTime = _cutoffDate;
+        var reachedLowerBound = false;
 
-        while (!stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested && !reachedLowerBound)
         {
             if (beforeDateTime <= _lowerBoundDate)
             {
+                Console.WriteLine($"Reached lower bound in {channel.Id}");
                 break;
             }
 
@@ -64,6 +67,12 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
             await foreach (var message in channel.GetMessagesAsync(pagination).WithCancellation(stoppingToken))
             {
                 foundAny = true;
+                
+                if (message.CreatedAt <= _lowerBoundDate)
+                {
+                    reachedLowerBound = true;
+                    break;
+                }
 
                 if (message.Author.Id == _userId && message.CreatedAt < _cutoffDate)
                 {
