@@ -5,7 +5,7 @@ namespace IchigoHoshimiya.Services;
 
 public partial class TwitterReplacementService : ITwitterReplacementService
 {
-    private const string ReplacementDomain = "https://fxtwitter.com";
+    private const string ReplacementDomain = "https://girlcockx.com";
     private static readonly string[] SDomainsToWatch = ["https://twitter.com", "https://x.com"];
 
     private static readonly Regex SFxTwitterRegex = MyRegex();
@@ -31,6 +31,6 @@ public partial class TwitterReplacementService : ITwitterReplacementService
             : Task.FromResult<string?>(null);
     }
 
-    [GeneratedRegex(@"(https://fxtwitter\.com/[^\s?|]+)", RegexOptions.Compiled)]
+    [GeneratedRegex(@"(https://girlcockx\.com/[^/\s]+/status/[^\s?|]+)", RegexOptions.Compiled)]
     private static partial Regex MyRegex();
 }
