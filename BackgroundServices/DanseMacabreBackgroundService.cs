@@ -101,7 +101,8 @@ public class DanseMacabreBackgroundService(RestClient restClient) : BackgroundSe
         1351683168348016680,
         1359395731072614562,
         1362814442043080764,
-        1396550243482603710
+        1396550243482603710,
+        680754754166718602
     ];
 
     private readonly DateTimeOffset _lowerBoundDate = new(2022, 2, 19, 0, 0, 0, TimeSpan.Zero);
