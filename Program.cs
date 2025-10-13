@@ -36,7 +36,7 @@ builder.Services.AddHostedService<RssSearcherAndPosterService>();
 builder.Services.AddSingleton<GrassToucherReleaserService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<GrassToucherReleaserService>());
 
-builder.Services.AddHostedService<DanseMacabreBackgroundService>();
+// builder.Services.AddHostedService<DanseMacabreBackgroundService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
