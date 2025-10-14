@@ -14,7 +14,7 @@ file record GraphQlResponse([property: JsonPropertyName("data")] DataPayload Dat
 
 // You just gotta live with these warnings
 file record DataPayload(
-    [property: JsonPropertyName("dumpPaginator")]
+    [property: JsonPropertyName("dumpPagination")]
     DumpPaginator Paginator);
 
 file record DumpPaginator([property: JsonPropertyName("data")] List<DumpEntry> Data);
