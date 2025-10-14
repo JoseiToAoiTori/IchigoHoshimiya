@@ -94,7 +94,7 @@ public class AnimeThemesDbUpdateService(
     {
         logger.LogInformation("Querying GraphQL endpoint for dump URL...");
 
-        var queryText = await File.ReadAllTextAsync("Queries/DumpQuery.graphql", cancellationToken);
+        var queryText = await File.ReadAllTextAsync("Queries/Animethemes/DumpQuery.graphql", cancellationToken);
 
         var query = new { query = queryText };
 
