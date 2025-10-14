@@ -40,9 +40,9 @@ public class AnimeThemesDbUpdateService(
     {
         logger.LogInformation("AnimeThemes Update Service is starting.");
 
-        // Run immediately at startup
-        // await RunUpdateAsync(stoppingToken);
-
+#if RELEASE
+        await RunUpdateAsync(stoppingToken);
+#endif
         while (!stoppingToken.IsCancellationRequested)
         {
             // Calculate delay until the next 00:00 UTC
