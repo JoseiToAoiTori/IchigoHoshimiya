@@ -1,5 +1,5 @@
 {
-  dumpPaginator(sort: [CREATED_AT_DESC], first: 1) {
+  dumpPagination(sort: [CREATED_AT_DESC], first: 1) {
     data {
       link
     }
