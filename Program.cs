@@ -22,6 +22,21 @@ using NetCord.Services.ComponentInteractions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.Logging.AddSentry(options =>
+{
+    options.Dsn = builder.Configuration.GetValue<string>("Dsn");
+    
+    options.MinimumEventLevel = LogLevel.Error;
+    
+    options.Environment = builder.Environment.EnvironmentName;
+    
+    options.Release = builder.Configuration.GetValue<string>("SENTRY_RELEASE") ?? "ichigo-hoshimiya@1.0.0";
+    
+    options.AutoSessionTracking = true;
+    
+    options.Debug = builder.Environment.IsDevelopment();
+});
+
 builder.Services.Configure<AnimeThemesUpdaterSettings>(
     builder.Configuration.GetSection("AnimeThemesUpdater"));
 

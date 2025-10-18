@@ -24,6 +24,8 @@
         <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.421"/>
         <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.421"/>
         <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.421"/>
+        <PackageReference Include="Sentry" Version="5.16.1" />
+        <PackageReference Include="Sentry.Extensions.Logging" Version="5.16.1" />
     </ItemGroup>
 
     <ItemGroup>
