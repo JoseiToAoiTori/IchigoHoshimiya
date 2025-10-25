@@ -5,7 +5,7 @@ namespace IchigoHoshimiya.Services;
 
 public partial class TwitterReplacementService : ITwitterReplacementService
 {
-    private const string ReplacementDomain = "https://girlcockx.com";
+    private const string ReplacementDomain = "https://fxtwitter.com";
     private static readonly string[] SDomainsToWatch = ["https://twitter.com", "https://x.com"];
 
     private static readonly Regex STweetLinkRegex = TweetLinkRegex();
